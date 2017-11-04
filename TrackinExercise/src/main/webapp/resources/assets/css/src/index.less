@@ -1,0 +1,133 @@
+@import "normalize.less";
+@import "vars.less";
+
+.after(@opacity: .8; @bgColor: @DefaultBgColor) {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: -1;	
+	opacity: @opacity;
+	background-color: @bgColor;
+}
+
+.hiding { opacity: 0; }
+.visible { opacity: 1; }
+.big {font-size:1.5em;}
+.center {text-align:center;}
+
+body {
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 400;
+	width: 100%;
+	height: 100%;
+}
+
+#map {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+
+#form {
+	position: absolute;
+	z-index: 999;
+}
+
+	
+#search-box {
+	position: absolute;
+	z-index: 999;
+	font-size: 1.5em;
+	top: 30px;
+	height: 50px;
+	width: 60%;
+	left: 50%;
+	margin-left: -30%;
+	
+	> input {
+		position: absolute;
+		bottom: 5px;
+		top: 5px;
+		width: 100%;
+		background: transparent;
+		border: 0px;
+		color: #fff;
+		padding: 0em .5em;
+	}
+	
+	&::after {
+		.after();
+		border-radius: 10px;
+	}
+	
+}
+
+#waypoints {
+
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+	width: 300px;
+	z-index: 1;
+	color: @WayPointsTextColor;
+	
+	&::after {
+		.after(.9, @WayPointsBgColor);
+	    border: 3px solid darken(@WayPointsBgColor, 20%);
+	}
+	
+	ul {
+		padding: 0em;
+		margin: 0;
+		
+		> li {
+			list-style: none;
+			padding: .1em;
+			margin: 0;
+			
+			> a:hover {
+				
+				color: @ButtonTextColor;
+    			background-color: @ButtonBgColor;
+				
+				.close {
+					opacity: .8;
+				}
+			}
+			
+			> a {
+				display: block;
+				cursor: pointer;
+				border-radius: 5px;
+				padding: .5em .5em;
+				position: relative;
+			
+				> img {
+					vertical-align: middle;
+				}
+			
+				.close {
+					position: absolute;
+					display: block;
+					height: 20px;
+					width: 20px;
+					opacity:.3;
+					right: 5px;
+					top: 7px;
+					background-image: url('../images/close-circle-icon.png');
+					background-size: 100%;
+					transition: opacity 1s;
+				}
+			}
+		}
+		
+	}
+
+}
