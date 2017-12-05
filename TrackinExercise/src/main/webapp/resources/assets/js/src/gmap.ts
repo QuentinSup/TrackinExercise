@@ -27,16 +27,17 @@ function initMap() {
 }
 
 function createRoadObject(directions) {
+ 
     for (let i = 0; i < directions.routes.length; i++) {
-
-        // Define a symbol using SVG path notation, with an opacity of 1.
-        var lineSymbol = {
+        
+        // Define a symbol using SVG path notation, with an opacity.
+        let lineSymbol = {
             path: 'M 0,-1 0,1',
             strokeOpacity: .5,
             scale: 4
         };
 
-        let polylineOptions = i == 1 ? null : new google.maps.Polyline({
+        let polylineOptions = i == 0 ? null : new google.maps.Polyline({
             strokeColor: '#101010',
             strokeOpacity: 0.2,
             strokeWeight: 5,
@@ -63,7 +64,7 @@ function createRoadObject(directions) {
 }
 
 function cleanRoads() {
-    for (var i = 0; i < roads.length; i++) {
+    for (let i = 0; i < roads.length; i++) {
         let road = roads[i];
         road.setMap(null);
     }
@@ -76,7 +77,7 @@ function addWayPointMarker(waypoint) {
         return waypoint.marker;
     }
 
-    var marker = new google.maps.Marker({
+    let marker = new google.maps.Marker({
         position: { lat: parseFloat(waypoint.latitude), lng: parseFloat(waypoint.longitude) },
         map: map,
         icon: {
@@ -91,7 +92,7 @@ function addWayPointMarker(waypoint) {
 
     waypoint.marker = marker;
 
-    var infoWindow = new google.maps.InfoWindow({
+    let infoWindow = new google.maps.InfoWindow({
         content: '<strong>' + waypoint.label + '</strong> '
     });
 
@@ -112,25 +113,36 @@ function addWayPointMarker(waypoint) {
     return marker;
 }
 
+function centerizeWayPoint(wayPoint) {
+    map.panTo(wayPoint.marker.position);
+    if (map.getZoom() < 12) {
+        map.setZoom(12);
+    }
+}
 
-function drawRoute(from, to) {
+function drawRoute(from, to, fn?: Function) {
 
     if (!from || !to) {
         return;
     }
 
-    var request = {
+    let request = {
         origin: from,
         destination: to,
         optimizeWaypoints: true,
         provideRouteAlternatives: true,
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
         travelMode: google.maps.TravelMode.DRIVING
     };
 
-    // populate yor box/field with lat, lng
-    window.directionsService.route(request, function(response, status) {
+    // populate your box/field with lat, lng
+    window.directionsService.route(request, function(directions, status) {
         if (status == google.maps.DirectionsStatus.OK) {
-            createRoadObject(response);
+
+            createRoadObject(directions);
+            if($.isFunction(fn)) {
+                fn.call(directions);
+            }
         }
     });
 }
@@ -139,15 +151,13 @@ function initGMap() {
 
     window.directionsService = new google.maps.DirectionsService();
 
-    var map = window.map = initMap();
+    let map = window.map = initMap();
 
     // Create the search box and link it to the UI element.
-    var input = document.getElementById('search-input');
-    var searchBox = new google.maps.places.SearchBox(input);
+    let input = document.getElementById('search-input');
+    let searchBox = new google.maps.places.SearchBox(input);
 
-    var markers = [];
-
-
+    let markers = [];
 
     // Bias the SearchBox results towards current map's viewport.
     map.addListener('bounds_changed', function() {
@@ -158,7 +168,7 @@ function initGMap() {
     // Listen for the event fired when the user selects a prediction and retrieve
     // more details for that place.
     searchBox.addListener('places_changed', function() {
-        var places = searchBox.getPlaces();
+        let places = searchBox.getPlaces();
 
         if (places.length == 0) {
             return;
@@ -172,13 +182,13 @@ function initGMap() {
         markers = [];
 
         // For each place, get the icon, name and location.
-        var bounds = new google.maps.LatLngBounds();
+        let bounds = new google.maps.LatLngBounds();
         places.forEach(function(place) {
             if (!place.geometry) {
                 console.log("Returned place contains no geometry");
                 return;
             }
-            var icon = {
+            let icon = {
                 url: place.icon,
                 size: new google.maps.Size(71, 71),
                 origin: new google.maps.Point(0, 0),
@@ -186,7 +196,7 @@ function initGMap() {
                 scaledSize: new google.maps.Size(25, 25)
             };
 
-            var waypoint = new models.WayPoint(place.name);
+            let waypoint = new models.WayPoint(place.name);
             waypoint.setCoordinates(place.geometry.location.lat(), place.geometry.location.lng());
             createWayPoint(waypoint);
 

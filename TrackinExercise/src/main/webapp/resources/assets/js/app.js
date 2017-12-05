@@ -2,13 +2,24 @@ var models;
 (function (models) {
     var WayPoint = /** @class */ (function () {
         function WayPoint(json) {
+            var _this = this;
             this.type = ko.observable(0);
+            this.distance = ko.observable(0);
+            this.duration = ko.observable(0);
             if (typeof (json) == 'object') {
                 this.fromJson(json);
             }
             if (typeof (json) == 'string') {
                 this.label = json;
             }
+            this.distanceInMiles = ko.computed(function () {
+                var distance = _this.distance();
+                return Math.round(distance / WayPoint.MILE * 100) / 100;
+            }).extend({ throttle: 100 });
+            this.durationInMinutes = ko.computed(function () {
+                var duration = _this.duration();
+                return Math.round(duration / 60);
+            }).extend({ throttle: 100 });
         }
         WayPoint.prototype.data = function () {
             return {
@@ -16,6 +27,7 @@ var models;
                 label: this.label,
                 latitude: this.latitude,
                 longitude: this.longitude,
+                position: this.position,
                 type: this.type()
             };
         };
@@ -27,6 +39,7 @@ var models;
             this.label = json.label;
             this.latitude = json.latitude;
             this.longitude = json.longitude;
+            this.position = json.position;
             this.type(json.type);
         };
         WayPoint.prototype.getCoordinates = function () {
@@ -42,6 +55,70 @@ var models;
         WayPoint.prototype.setType = function (n) {
             this.type(n);
         };
+        WayPoint.prototype.save = function (fn) {
+            if (!this.id) {
+                // Create
+                WayPoint.create(this, fn);
+            }
+            else if (this.id == -1) {
+                // Delete
+                WayPoint.remove(this, fn);
+            }
+            else {
+                // Update
+                WayPoint.update(this, fn);
+            }
+        };
+        WayPoint.prototype.remove = function (fn) {
+            WayPoint.remove(this, fn);
+        };
+        WayPoint.create = function (wayPoint, fn) {
+            $.ajax({
+                method: 'POST',
+                url: WayPoint.API,
+                data: wayPoint.toJson(),
+                contentType: "application/json"
+            }).done(function (wayPointData) {
+                // Update id
+                wayPoint.id = wayPointData.id;
+                if ($.isFunction(fn)) {
+                    fn.call(this);
+                }
+            });
+        };
+        WayPoint.update = function (wayPoint, fn) {
+            $.ajax({
+                method: 'PUT',
+                url: WayPoint.API + "/" + wayPoint.id,
+                data: wayPoint.toJson(),
+                contentType: "application/json"
+            }).done(function (wayPointData) {
+                if ($.isFunction(fn)) {
+                    fn.call(this);
+                }
+            });
+        };
+        WayPoint.remove = function (wayPoint, fn) {
+            $.ajax({
+                method: 'DELETE',
+                url: WayPoint.API + "/" + wayPoint.id,
+                contentType: "application/json"
+            }).done(function (wayPointData) {
+                wayPoint.id = null;
+                if ($.isFunction(fn)) {
+                    fn.call(this);
+                }
+            });
+        };
+        WayPoint.list = function (fn) {
+            $.getJSON(WayPoint.API).done(function (data) {
+                if ($.isFunction(fn)) {
+                    fn.call(this, data);
+                }
+            });
+        };
+        WayPoint.API = "api/waypoints";
+        WayPoint.MILE = 1609.344;
         return WayPoint;
     }());
     models.WayPoint = WayPoint;
@@ -63,13 +140,13 @@ function initMap() {
 }
 function createRoadObject(directions) {
     for (var i = 0; i < directions.routes.length; i++) {
-        // Define a symbol using SVG path notation, with an opacity of 1.
+        // Define a symbol using SVG path notation, with an opacity.
         var lineSymbol = {
             path: 'M 0,-1 0,1',
-            strokeOpacity: 1,
+            strokeOpacity: .5,
             scale: 4
         };
-        var polylineOptions = i == 1 ? null : new google.maps.Polyline({
+        var polylineOptions = i == 0 ? null : new google.maps.Polyline({
             strokeColor: '#101010',
             strokeOpacity: 0.2,
             strokeWeight: 5,
@@ -128,7 +205,13 @@ function addWayPointMarker(waypoint) {
     });
     return marker;
 }
-function drawRoute(from, to) {
+function centerizeWayPoint(wayPoint) {
+    map.panTo(wayPoint.marker.position);
+    if (map.getZoom() < 12) {
+        map.setZoom(12);
+    }
+}
+function drawRoute(from, to, fn) {
     if (!from || !to) {
         return;
     }
@@ -137,12 +220,16 @@ function drawRoute(from, to) {
         destination: to,
         optimizeWaypoints: true,
         provideRouteAlternatives: true,
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
         travelMode: google.maps.TravelMode.DRIVING
     };
-    // populate yor box/field with lat, lng
-    window.directionsService.route(request, function (response, status) {
+    // populate your box/field with lat, lng
+    window.directionsService.route(request, function (directions, status) {
         if (status == google.maps.DirectionsStatus.OK) {
-            createRoadObject(response);
+            createRoadObject(directions);
+            if ($.isFunction(fn)) {
+                fn.call(directions);
+            }
         }
     });
 }
@@ -210,37 +297,47 @@ function initGMap() {
 /// <reference path="./gmap.ts"/>
 var waypoints = ko.observableArray();
 function createWayPoint(wayPoint) {
-    $.ajax({
-        method: 'POST',
-        url: "api/waypoint",
-        data: wayPoint.toJson(),
-        contentType: "application/json"
-    }).done(function () {
-        addWayPoint(wayPoint);
-        drawWayPointsRoads();
+    wayPoint.save(function () {
+        // Add wayPoint to route
+        addWayPoint(this);
     });
 }
 function deleteWayPoint(wayPoint) {
-    $.ajax({
-        method: 'DELETE',
-        url: "api/waypoint",
-        data: wayPoint.toJson(),
-        contentType: "application/json"
-    }).done(function () {
+    wayPoint.remove(function () {
         removeWayPoint(wayPoint);
     });
 }
-function addWayPoint(wayPoint) {
+function addWayPoint(wayPoint, draw) {
+    if (draw === void 0) { draw = true; }
     waypoints.push(wayPoint);
     var waypointsData = waypoints();
     wayPoint.setType(waypointsData.length == 1 ? 0 : 1);
     addWayPointMarker(wayPoint);
+    if (draw) {
+        // Draw roads
+        drawWayPointsRoads();
+    }
 }
 function drawWayPointsRoads() {
     cleanRoads();
     var waypointsData = waypoints();
+    if (waypointsData.length == 0) {
+        return;
+    }
+    waypointsData[0].duration(0);
+    waypointsData[0].distance(0);
+    var _loop_1 = function (i) {
+        var wayPointFrom = waypointsData[i - 1];
+        var wayPointTo = waypointsData[i];
+        drawRoute(wayPointFrom.getCoordinates(), wayPointTo.getCoordinates(), function () {
+            var duration = this.routes[0].legs[0].duration.value;
+            var distance = this.routes[0].legs[0].distance.value;
+            wayPointTo.duration(duration);
+            wayPointTo.distance(distance);
+        });
+    };
     for (var i = 1; i < waypointsData.length; i++) {
-        drawRoute(waypointsData[i - 1].getCoordinates(), waypointsData[i].getCoordinates());
+        _loop_1(i);
     }
 }
 function removeWayPoint(wayPoint) {
@@ -252,12 +349,33 @@ function removeWayPoint(wayPoint) {
     drawWayPointsRoads();
 }
 function retrieveWayPointList() {
-    $.getJSON("api/waypoint").done(function (data) {
+    models.WayPoint.list(function (data) {
         $.each(data, function (n, waypointJson) {
-            addWayPoint(new models.WayPoint(waypointJson));
+            addWayPoint(new models.WayPoint(waypointJson), false);
         });
         drawWayPointsRoads();
+        $('#waypoints > ul').sortable({
+            update: function (event, ui) {
+                updateWayPointsPositions();
+            }
+        });
     });
+}
+function updateWayPointsPositions() {
+    var wpoints = [];
+    $('#waypoints > ul > li').each(function () {
+        var $item = $(this);
+        var wayPoint = ko.dataFor(this);
+        if (wayPoint.position != $item.index()) {
+            wayPoint.position = $item.index();
+            wayPoint.save();
+        }
+        wpoints.push(wayPoint);
+    });
+    // Update waypoint list order
+    waypoints(wpoints);
+    // Redraw roads (could be optimized)
+    drawWayPointsRoads();
 }
 // JQuery load on ready
 $(function () {

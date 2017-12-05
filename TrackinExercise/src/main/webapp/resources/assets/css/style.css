@@ -192,6 +192,22 @@ th {
 .center {
   text-align: center;
 }
+.text-smaller {
+  font-size: .9em;
+}
+.waypoint_detail {
+  font-size: .9em;
+  background: #333333;
+  padding-left: .5em;
+  margin: 0em 1em;
+  border-radius: 5px;
+  color: #dedede;
+}
+.waypoint_detail > img {
+  height: 20px;
+  vertical-align: middle;
+  margin: 0px 2px;
+}
 body {
   font-family: 'Open Sans', sans-serif;
   font-weight: 400;

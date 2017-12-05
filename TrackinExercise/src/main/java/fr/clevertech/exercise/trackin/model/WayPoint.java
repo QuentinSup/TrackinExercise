@@ -6,6 +6,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 /**
  * Waypoint hibernate model
  * @author QuentinSup
@@ -33,6 +36,10 @@ public class WayPoint {
 	 * GPS coords : longitude
 	 */
 	private String longitude;
+	/**
+	 * Route delivery position
+	 */
+	private Integer position;
 
 	/**
 	 * Constructor
@@ -118,6 +125,30 @@ public class WayPoint {
 	 */
 	public void setLongitude(String longitude) {
 		this.longitude = longitude;
+	}
+	
+	/**
+	 * Return delivery position
+	 * @return
+	 */
+	public int getPosition() {
+		return position;
+	}
+
+	/**
+	 * Set delivery position
+	 * @param position
+	 */
+	public void setPosition(int position) {
+		this.position = new Integer(position);
+	}
+	
+	/**
+	 * Return waypoint as JSON data
+	 */
+	public String toJson() {
+		final Gson gson = new GsonBuilder().create();
+		return gson.toJson(this);
 	}
 
 }
