@@ -14,21 +14,60 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * Main controller
+ * @author QuentinSup
+ *
+ */
 @Controller
-@RequestMapping("/")
-@Scope("singleton")
+@RequestMapping("/") // Catch calls from root path
+@Scope("singleton") // Make controller singleton
 public class Application {
 
-	 private static final Logger logger = LoggerFactory.getLogger(Application.class);
+	// Logger
+	private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
-	 private static SessionFactory sessionFactory;
-	 private static Session session;
+	/**
+	 * Database session factory
+	 */
+	private static SessionFactory sessionFactory;
+	/**
+	 * Database session singleton
+	 */
+	private static Session session;
 
+	// Static methods
+	
+	/**
+	 * Return Hibernate Session Factory initialized
+	 * @return
+	 */
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+
+	/**
+	 * Return Hibernate session singleton
+	 * 
+	 * @return
+	 */
+	public static Session getActiveSession() {
+		if (session == null || !session.isConnected()) {
+			session = sessionFactory.openSession();
+		}
+		return session;
+	}
+	
+	// Class methods
+	
+	/**
+	 * Do treatments at launch
+	 */
 	@PostConstruct
 	public void setUp() {
-		
+
 		logger.info("Initialize Hibernate and setup database connection");
-		
+
 		// configures settings from hibernate.cfg.xml
 		final StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
 		try {
@@ -43,40 +82,28 @@ public class Application {
 			// so destroy it manually.
 			StandardServiceRegistryBuilder.destroy(registry);
 		}
-				
+
 	}
-	
+
+	/**
+	 * Do treatment at end
+	 */
 	@PreDestroy
 	public void clean() {
-		
+
 		// End session
-		if(sessionFactory.isOpen()) {
+		if (sessionFactory.isOpen()) {
 			logger.info("Close database connection");
 			sessionFactory.close();
 		}
-				
+
 	}
-	
+
 	/**
-	 * Return Hibernate Session Factory initialized
+	 * Root mapping method
 	 * @return
 	 */
-	public static SessionFactory getSessionFactory() {
-		return sessionFactory;
-	}
-	
-	/**
-	 * Return Hibernate session singleton
-	 * @return
-	 */
-	public static Session getActiveSession() {
-		if(session == null || !session.isConnected()) {
-			session = sessionFactory.openSession();
-		}
-		return session;
-	}
-	
-	@RequestMapping("/")
+	@RequestMapping("/") // Empty call uri (main use)
 	public String index() {
 		return "index.jsp";
 	}
