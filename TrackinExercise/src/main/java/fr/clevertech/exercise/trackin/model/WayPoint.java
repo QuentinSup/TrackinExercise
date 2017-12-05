@@ -7,9 +7,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
- * 
+ * Waypoint hibernate model
  * @author QuentinSup
- *
  */
 @Entity
 @Table(name = "waypoint")
@@ -57,7 +56,7 @@ public class WayPoint {
 	 * @return
 	 */
 	public int getId() {
-		return this.id;
+		return id;
 	}
 
 	/**
@@ -84,7 +83,7 @@ public class WayPoint {
 	 * @return
 	 */
 	public String getLabel() {
-		return this.label;
+		return label;
 	}
 
 	/**

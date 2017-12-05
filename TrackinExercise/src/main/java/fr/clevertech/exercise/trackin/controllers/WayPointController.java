@@ -21,6 +21,11 @@ import com.google.gson.GsonBuilder;
 
 import fr.clevertech.exercise.trackin.model.WayPoint;
 
+/**
+ * API WayPoint resources
+ * @author QuentinSup
+ *
+ */
 @Controller
 @RequestMapping("/api/waypoint")
 public class WayPointController {
@@ -138,7 +143,7 @@ public class WayPointController {
 		}
 		
 		// Parse json value
-		JSONObject json = new JSONObject(jsonValue);
+		final JSONObject json = new JSONObject(jsonValue);
 		
 		// Get waypoint from session
 		WayPoint waypoint = session.load(WayPoint.class, new Integer(json.optInt("id")));
@@ -154,7 +159,7 @@ public class WayPointController {
 			session.getTransaction().commit();
 			// Return HttpStatus 200
 			return new ResponseEntity<String>(HttpStatus.OK);
-		}catch(Exception e) {
+		} catch(Exception e) {
 			logger.error(e.getMessage(), e);
 			session.getTransaction().rollback();
 			// Return HttpStatus 500
