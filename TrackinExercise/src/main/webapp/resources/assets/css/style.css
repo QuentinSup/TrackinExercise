@@ -195,19 +195,6 @@ th {
 .text-smaller {
   font-size: .9em;
 }
-.waypoint_detail {
-  font-size: .9em;
-  background: #333333;
-  padding-left: .5em;
-  margin: 0em 1em;
-  border-radius: 5px;
-  color: #dedede;
-}
-.waypoint_detail > img {
-  height: 20px;
-  vertical-align: middle;
-  margin: 0px 2px;
-}
 body {
   font-family: 'Open Sans', sans-serif;
   font-weight: 400;
@@ -258,7 +245,10 @@ body {
   background-color: #252830;
   border-radius: 10px;
 }
-#waypoints {
+#menu {
+  position: absolute;
+}
+#tour {
   position: absolute;
   right: 0px;
   top: 0px;
@@ -267,7 +257,7 @@ body {
   z-index: 1;
   color: #fff;
 }
-#waypoints::after {
+#tour::after {
   content: '';
   display: block;
   position: absolute;
@@ -280,9 +270,36 @@ body {
   background-color: #101010;
   border: 3px solid #000000;
 }
-#waypoints ul {
-  padding: 0em;
+#drivers > ul {
+  padding: 0;
   margin: 0;
+  margin-left: 20px;
+  margin-top: 15px;
+}
+#drivers > ul > li {
+  list-style: none;
+  padding: .1em;
+  margin: 0;
+}
+#waypoints {
+  position: relative;
+}
+#waypoints .waypoints_line {
+  border: 1.5px dashed#d05275;
+  position: absolute;
+  left: 17px;
+  top: 25px;
+  bottom: 15px;
+}
+#waypoints h4 {
+  margin: 0px;
+  padding: .3em;
+}
+#waypoints ul {
+  padding: 0;
+  margin: 0;
+  margin-left: 20px;
+  margin-top: 15px;
 }
 #waypoints ul > li {
   list-style: none;
@@ -305,6 +322,11 @@ body {
 }
 #waypoints ul > li > a > img {
   vertical-align: middle;
+  position: absolute;
+  left: -16px;
+}
+#waypoints ul > li > a .waypoint_label {
+  padding-left: 10px;
 }
 #waypoints ul > li > a .close {
   position: absolute;
@@ -312,9 +334,53 @@ body {
   height: 20px;
   width: 20px;
   opacity: .3;
-  right: 5px;
-  top: 7px;
+  right: 7px;
+  top: 9px;
   background-image: url('../images/close-circle-icon.png');
   background-size: 100%;
   transition: opacity 1s;
+}
+#waypoints .waypoint_detail {
+  font-size: .9em;
+  background: #10767b;
+  padding-left: .5em;
+  margin: 0em 1em;
+  border-radius: 5px;
+  color: #dedede;
+}
+#waypoints .waypoint_detail > img {
+  height: 20px;
+  vertical-align: middle;
+  margin: 0px 2px;
+}
+#waypoints .waypoint_total {
+  position: relative;
+  display: block;
+  bottom: 5px;
+  left: 0px;
+  right: 0px;
+  z-index: 9;
+  margin-top: 2em;
+}
+.progress_area {
+  position: absolute;
+  left: 50px;
+  bottom: 50px;
+  padding: .5em 1.5em;
+  color: #fff;
+  font-weight: bold;
+  z-index: 9;
+}
+.progress_area::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+  border-radius: 10px;
 }

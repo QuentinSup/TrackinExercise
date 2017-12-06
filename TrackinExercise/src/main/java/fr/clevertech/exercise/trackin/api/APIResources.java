@@ -1,4 +1,4 @@
-package fr.clevertech.exercise.trackin.controllers;
+package fr.clevertech.exercise.trackin.api;
 
 import java.util.List;
 
@@ -6,12 +6,10 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,77 +18,89 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import fr.clevertech.exercise.trackin.model.WayPoint;
+import fr.clevertech.exercise.trackin.controllers.Application;
+import fr.clevertech.exercise.trackin.model.AbstractModel;
 
 /**
- * API WayPoints resources
- * GET /api/waypoints 
- * POST /api/waypoints
- * PUT /api/waypoints/{waypoint_id} 
- * DELETE /api/waypoints/{waypoint_id}
- * 
+ * API Model resources
  * @author QuentinSup
  */
-@Controller
-@RequestMapping("/api/waypoints")
-public class WayPointController {
+public abstract class APIResources<T extends AbstractModel> {
 
 	/**
 	 * Logger
 	 */
-	final static private Logger logger = LoggerFactory.getLogger(WayPoint.class);
+	final static private Logger logger = LoggerFactory.getLogger(APIResources.class);
 
+	private Class<T> classModel;
+	private String orderBy;
+	
 	/**
-	 * Retrieve Waypoint from session or create a new one
+	 * constructor
+	 * @param classModel
+	 * @param orderBy
+	 */
+	public APIResources(final Class<T> classModel, final String orderBy) {
+		this.classModel = classModel;
+		this.orderBy = orderBy;
+	}
+	
+	/**
+	 * Method to be implemented to parse jsonValue and set data 
+	 * @param jsonValue
+	 */
+	public abstract void populateModel(T model, final String jsonValue);
+	
+	/**
+	 * Retrieve Model from session or create a new one
 	 * 
 	 * @param id
 	 * @param jsonValue
 	 * @return
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
 	 */
-	private static WayPoint retrieveWayPoint(final String id, final String jsonValue) {
+	private T retrieveModelObject(final String id, final String jsonValue) throws InstantiationException, IllegalAccessException {
 
 		// Get hibernate session factory
 		final Session session = Application.getActiveSession();
 
-		WayPoint waypoint;
+		T model;
 
 		if (id != null && !"".equals(id.trim())) {
-			// Get waypoint from session
-			waypoint = session.load(WayPoint.class, new Integer(id));
-			if (waypoint == null) {
-				// If not, create waypoint object
-				waypoint = new WayPoint(Integer.valueOf(id));
+			// Get model from session
+			model = (T) session.load(this.classModel, new Integer(id));
+			if (model == null) {
+				// If not, create driver object
+				model = (T)this.classModel.newInstance();
+				model.setId(Integer.valueOf(id));
 			}
 		} else {
-			// Create waypoint
-			waypoint = new WayPoint();
+			// Create model
+			model = (T)this.classModel.newInstance();
+		}
+		
+		if (jsonValue != null && !"".equals(jsonValue.trim())) {
+			// Populate data
+			this.populateModel(model, jsonValue);
 		}
 
-		if (jsonValue != null && !"".equals(id.trim())) {
-			// Parse json value
-			JSONObject json = new JSONObject(jsonValue);
-
-			// Create waypoint
-			waypoint.setLabel(json.optString("label", "No label"));
-			waypoint.setLatitude(json.optString("latitude", "0"));
-			waypoint.setLongitude(json.optString("longitude", "0"));
-			waypoint.setPosition(json.optInt("position"));
-		}
-
-		return waypoint;
+		return model;
 	}
 
 	/**
-	 * CREATE Create a new waypoint and persist into database
+	 * CREATE Create a new model object and persist into database
 	 * 
 	 * @param json
 	 * @return
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
 	 */
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json; charset=UTF-8")
-	public ResponseEntity<String> create(@RequestBody String jsonValue) {
+	public ResponseEntity<String> create(@RequestBody String jsonValue) throws InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Create a new waypoint with json data : %s", jsonValue));
+			logger.debug(String.format("Create a new object with json data : %s", jsonValue));
 		}
 
 		// Get hibernate session factory
@@ -102,14 +112,15 @@ public class WayPointController {
 		}
 
 		if (logger.isTraceEnabled()) {
-			logger.trace("Create WayPoint class");
+			logger.trace("Create class");
 		}
 
-		// Create waypoint
-		WayPoint waypoint = retrieveWayPoint(null, jsonValue);
+		// Create model
+		T model = retrieveModelObject(null, jsonValue);
 
+		
 		if (logger.isTraceEnabled()) {
-			logger.trace("Add new WayPoint data");
+			logger.trace(String.format("Add new model '%s' data", model.getClass()));
 		}
 
 		// Save
@@ -118,7 +129,7 @@ public class WayPointController {
 		// Remove data from database
 		try {
 			manager.getTransaction().begin();
-			manager.persist(waypoint);
+			manager.persist(model);
 			manager.getTransaction().commit();
 			// Return HttpStatus 200 for Success
 			return new ResponseEntity<String>(HttpStatus.OK);
@@ -132,16 +143,16 @@ public class WayPointController {
 	}
 
 	/**
-	 * LIST Return all waypoints from database
+	 * LIST Return all model list from database
 	 * 
 	 * @param json
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-	public ResponseEntity<String> listWaypoints() {
+	public ResponseEntity<String> list() {
 
 		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Return waypoints"));
+			logger.debug(String.format("Return data list from database"));
 		}
 
 		// Get hibernate session factory
@@ -152,33 +163,35 @@ public class WayPointController {
 			return new ResponseEntity<String>(HttpStatus.PRECONDITION_FAILED);
 		}
 
-		if (logger.isTraceEnabled()) {
-			logger.trace("Retrieve waypoint list from database");
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Retrieve model list '%s' from database", this.classModel.getSimpleName()));
 		}
-
+		
 		// Retrieve data from database
 		@SuppressWarnings("unchecked")
-		List<WayPoint> waypoints = (List<WayPoint>) session.createQuery("from WayPoint ORDER BY position ASC").list();
+		List<T> models = (List<T>) session.createQuery(String.format("from %s" + (this.orderBy == null?"":" ORDER BY " + this.orderBy), this.classModel.getSimpleName())).list();
 
 		// Convert into json
 		final Gson gson = new GsonBuilder().create();
-		final String jsonValue = gson.toJson(waypoints);
+		final String jsonValue = gson.toJson(models);
 
-		// Return all waypoints as json with HttpStatus 200
+		// Return all drivers as json with HttpStatus 200
 		return new ResponseEntity<String>(jsonValue, HttpStatus.OK);
 	}
 
 	/**
-	 * DELETE Remove a waypoint from database
+	 * DELETE Remove a model object from database
 	 * 
 	 * @param json
 	 * @return
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
 	 */
-	@RequestMapping(method = RequestMethod.DELETE, value = "/{waypoint_id}")
-	public synchronized ResponseEntity<String> remove(@PathVariable("waypoint_id") final String id) throws NumberFormatException {
+	@RequestMapping(method = RequestMethod.DELETE, value = "/{model_id}")
+	public synchronized ResponseEntity<String> remove(@PathVariable("model_id") final String id) throws NumberFormatException, InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Remove a waypoint with id : %s", id));
+			logger.debug(String.format("Remove an object with id : %s", id));
 		}
 
 		// Get hibernate session factory
@@ -189,17 +202,17 @@ public class WayPointController {
 			return new ResponseEntity<String>(HttpStatus.PRECONDITION_FAILED);
 		}
 
-		if (logger.isTraceEnabled()) {
-			logger.trace("Remove waypoint from database");
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Remove model '%s' from database", this.classModel.getSimpleName()));
 		}
 
-		// Get waypoint
-		WayPoint waypoint = retrieveWayPoint(id, null);
+		// Get driver
+		T model = retrieveModelObject(id, null);
 
 		// Remove data from database
 		try {
 			session.getTransaction().begin();
-			session.delete(waypoint);
+			session.delete(model);
 			session.getTransaction().commit();
 			// Return HttpStatus 200
 			return new ResponseEntity<String>(HttpStatus.OK);
@@ -213,17 +226,19 @@ public class WayPointController {
 	}
 
 	/**
-	 * PUT Update a waypoint to database
+	 * PUT Update a model object to database
 	 * 
 	 * @param json
 	 * @return
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
 	 */
-	@RequestMapping(method = RequestMethod.PUT, value = "/{waypoint_id}")
-	public synchronized ResponseEntity<String> update(@PathVariable("waypoint_id") final String id, @RequestBody String jsonValue)
-			throws NumberFormatException {
+	@RequestMapping(method = RequestMethod.PUT, value = "/{model_id}")
+	public synchronized ResponseEntity<String> update(@PathVariable("model_id") final String id, @RequestBody String jsonValue)
+			throws NumberFormatException, InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Update a waypoint with id : %s", id));
+			logger.debug(String.format("Update an object with id : %s", id));
 		}
 
 		// Get hibernate session factory
@@ -235,16 +250,16 @@ public class WayPointController {
 		}
 
 		if (logger.isTraceEnabled()) {
-			logger.trace("Update waypoint from database");
+			logger.trace("Update driver from database");
 		}
 
-		// Get waypoint
-		WayPoint waypoint = retrieveWayPoint(id, jsonValue);
+		// Get driver
+		T model = retrieveModelObject(id, jsonValue);
 
 		// Remove data from database
 		try {
 			session.getTransaction().begin();
-			session.persist(waypoint);
+			session.persist(model);
 			session.getTransaction().commit();
 			// Return HttpStatus 200
 			return new ResponseEntity<String>(HttpStatus.OK);

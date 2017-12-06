@@ -6,24 +6,20 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 /**
  * Waypoint hibernate model
  * @author QuentinSup
  */
 @Entity
 @Table(name = "waypoint")
-public class WayPoint {
-
+public class WayPoint extends AbstractModel {
+	
 	/**
 	 * Identifier
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-
 	/**
 	 * Waypoint label
 	 */
@@ -40,21 +36,16 @@ public class WayPoint {
 	 * Route delivery position
 	 */
 	private Integer position;
-
+	/**
+	 * Route delivery type (0:pickup, 1:drop)
+	 */
+	private Integer type;
+	
 	/**
 	 * Constructor
 	 */
 	public WayPoint() {
 		super();
-	}
-	
-	/**
-	 * Constructor with identifier
-	 * @param id
-	 */
-	public WayPoint(int id) {
-		this();
-		this.id = id;
 	}
 
 	/**
@@ -71,10 +62,10 @@ public class WayPoint {
 	 * 
 	 * @param id
 	 */
-	protected void setId(int id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-
+	
 	/**
 	 * Set waypoint label
 	 * 
@@ -142,13 +133,21 @@ public class WayPoint {
 	public void setPosition(int position) {
 		this.position = new Integer(position);
 	}
-	
+
 	/**
-	 * Return waypoint as JSON data
+	 * Return delivery type
+	 * @return
 	 */
-	public String toJson() {
-		final Gson gson = new GsonBuilder().create();
-		return gson.toJson(this);
+	public int getType() {
+		return type;
+	}
+
+	/**
+	 * Set delivery type
+	 * @param position
+	 */
+	public void setType(int type) {
+		this.type = new Integer(type);
 	}
 
 }
