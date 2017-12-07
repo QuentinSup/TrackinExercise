@@ -48,14 +48,14 @@ module trackinexercise {
         }
 
         public create(wayPoint: models.WayPoint, fn?: Function): void {
-            
+
             let wayPoints: models.WayPoint[] = this.all();
-            
+
             // Autoset position
             wayPoint.position = wayPoints.length;
             // Autoset type (first must be pickup)
-            wayPoint.type(wayPoints.length == 0?0:1);
-            
+            wayPoint.type(wayPoints.length == 0 ? 0 : 1);
+
             // Save to database
             wayPoint.save((wPoint: models.WayPoint): void => {
 
@@ -73,6 +73,20 @@ module trackinexercise {
          */
         public all(): models.WayPoint[] {
             return this.wayPointsList();
+        }
+
+        /**
+         * Search a WayPoint by location (lat, lng) and return object found
+         */
+        public getByLocation(location: any): models.WayPoint {
+            let wayPoints: models.WayPoint[] = this.all();
+            for (let i = 0; i < wayPoints.length; i++) {
+                let wayPoint: models.WayPoint = wayPoints[i];
+                if(wayPoint.marker.position.lat() == location.lat() && wayPoint.marker.position.lng() == location.lng()) {
+                    return wayPoint;
+                }
+            }
+            return null;
         }
 
         /**

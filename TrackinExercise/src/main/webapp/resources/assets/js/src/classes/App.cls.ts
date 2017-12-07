@@ -3,6 +3,16 @@
 
 module trackinexercise {
 
+    declare var iziToast;
+    
+    const MESSAGES: string[] = [
+        "Use the address bar on the top to add a new delivery stop",
+        "Use drag & drop to modify stop order",
+        "Double-click on the delivery stop icon to change the delivery type (pickup or drop-off)",
+        "Click on 'Optimize' button to optimize the route"
+    ];
+    
+    
     /**
      * Main application class
      */
@@ -14,10 +24,15 @@ module trackinexercise {
         public wayPoints: WayPointsManager = new WayPointsManager();
         // Drivers
         public driversList: KnockoutObservableArray<models.Driver> = ko.observableArray<models.Driver>();
-        
+
         // Message trigger
         public calculatingRoute: KnockoutObservable<boolean> = ko.observable<boolean>(false);
-
+        
+        /**
+         * Index of the current message to show
+         */
+        private messageIndex = 0;
+        
         /**
          * Constructor
          */
@@ -25,15 +40,15 @@ module trackinexercise {
             this.gMap = gMap;
 
             this.calculatingRoute.subscribe((b: boolean): void => {
-                if(b) {
+                if (b) {
                     $('#progress_route').fadeIn('slow');
                 } else {
-                    $('#progress_route').fadeOut('slow');    
+                    $('#progress_route').fadeOut('slow');
                 }
             });
 
         }
-        
+
         /**
          * Initialization
          */
@@ -95,22 +110,22 @@ module trackinexercise {
 
             });
         }
-    
+
         /**
          * Retrieve drivers
          */
         public retrieveDriverList(fn?: Function): void {
 
-            
-            
+
+
             new models.Driver().list((data): void => {
 
                 let drivers: models.Driver[] = [];
-                
+
                 $.each(data, (n, driverJson): void => {
                     drivers.push(new models.Driver(driverJson));
                 });
-                
+
                 this.driversList(drivers);
 
                 if ($.isFunction(fn)) {
@@ -118,9 +133,9 @@ module trackinexercise {
                 }
 
             });
-            
+
         }
-        
+
         /**
          * Center map on entire tour
          */
@@ -140,30 +155,51 @@ module trackinexercise {
         /**
          * Draw routes
          */
-        private drawWayPointsRoads(): void {
+        public drawWayPointsRoads(optimize: boolean = false): void {
 
             this.gMap.cleanRoads();
 
-            let waypointsData: models.WayPoint[] = this.wayPoints.all();
+            let wayPointsData: models.WayPoint[] = this.wayPoints.all();
 
-            if (waypointsData.length == 0) {
+            if (wayPointsData.length == 0) {
                 return;
             }
 
             // First waypoint
-            waypointsData[0].duration(0);
-            waypointsData[0].distance(0);
+            wayPointsData[0].duration(0);
+            wayPointsData[0].distance(0);
 
-            for (let i = 1; i < waypointsData.length; i++) {
-                let wayPointFrom: models.WayPoint = waypointsData[i - 1];
-                let wayPointTo: models.WayPoint = waypointsData[i];
-                this.gMap.drawRoute(wayPointFrom.getCoordinates(), wayPointTo.getCoordinates(), function() {
-                    let duration: number = this.routes[0].legs[0].duration.value;
-                    let distance: number = this.routes[0].legs[0].distance.value;
-                    wayPointTo.duration(duration);
-                    wayPointTo.distance(distance);
-                });
-            }
+            this.gMap.drawRoute(wayPointsData, optimize, (directions: any, wayPointsMapped: models.WayPoint[]): void => {
+                let wayPointsList: models.WayPoint[] = [];
+                wayPointsList.push(wayPointsData[0]);
+                for (let i = 0; i < directions.routes[0].legs.length; i++) {
+                    
+                    let duration: number = directions.routes[0].legs[i].duration.value;
+                    let distance: number = directions.routes[0].legs[i].distance.value;
+                    let newOrder: number = directions.routes[0].waypoint_order[i];
+                    
+                    // Retrieve new waypoint order
+                    let wayPoint: models.WayPoint = wayPointsMapped[newOrder];
+                    if(!wayPoint) {
+                        // Last waypoint
+                        newOrder = wayPointsData.length - 1;
+                        wayPoint = wayPointsData[newOrder];
+                    }
+                    wayPoint.duration(duration);
+                    wayPoint.distance(distance);
+                    if(wayPoint.position != i + 1) {
+                        // Save new wayPoint position
+                        wayPoint.position = i + 1;
+                        wayPoint.save();    
+                    }
+                    wayPointsList.push(wayPoint);
+                    
+                }
+                
+                // Update waypoint order
+                this.wayPoints.wayPointsList([]);
+                this.wayPoints.wayPointsList(wayPointsList);
+            });
 
         }
 
@@ -174,6 +210,7 @@ module trackinexercise {
 
             let wPoints: models.WayPoint[] = [];
 
+            // Could be optimized to save new ordre with one transaction
             $('#waypoints > ul > li').each(function() {
                 let $item = $(this);
                 let wayPoint = ko.dataFor(this);
@@ -193,7 +230,32 @@ module trackinexercise {
 
         }
 
-
+        /**
+         * Toast a user message
+         */
+        public toast(text: string, title: string = "Quentin says "): void {
+            iziToast.show({
+                theme: 'dark',
+                position: 'bottom',
+                balloon: true, 
+                title: title,
+                timeout: 7000,
+                message: text,
+                layout: 1,
+                target: '#trackin_message_area'
+            });    
+        }
+        
+        /**
+         * 
+         */
+        public talk(): void {
+            let message: string = MESSAGES[this.messageIndex++];
+            if(this.messageIndex >= MESSAGES.length) {
+                this.messageIndex = 0;
+            }
+            this.toast(message, 'Need help ?');
+        }
 
     }
 

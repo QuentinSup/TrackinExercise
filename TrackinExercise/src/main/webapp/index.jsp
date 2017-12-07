@@ -8,15 +8,22 @@
 	<link rel="stylesheet" href="resources/assets/vendor/jquery-ui/jquery-ui-1.12.1.structure.min.css">
 	<link rel="stylesheet" href="resources/assets/vendor/bootstrap/bootstrap-grid.min.css">
 	<link rel="stylesheet" href="resources/assets/vendor/animate/animate.css">
+	<link rel="stylesheet" href="resources/assets/vendor/iziToast/iziToast.min.css">
 	<link rel="stylesheet" href="resources/assets/css/style.css">
 	
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet">
 
 </head>
 <body>
+
+	<div id="trackin_support" class="medaillon animated fadeInUp" data-bind="click: function() { app.talk(); }">
+		<div id="trackin_message_area"></div>
+	</div>
+
 	<div id="progress_route" class="progress_area">
 		<span>Calculating route...</span>
 	</div>
+	
 	<div id="search-box" class="animated fadeInDown">
 		<input id="search-input" type="text" placeholder="Address" />
 	</div>
@@ -57,11 +64,11 @@
 				</li>
 				<!-- /ko -->
 			</ul>
-			<div class="waypoint_detail waypoint_total">
-				<h4>Total</h4>
-				<img src="resources/assets/images/distance-128.png" /><span data-bind="text: wayPoints.distanceInMiles()"></span> miles<br />
-				<img src="resources/assets/images/duration.png" /><span data-bind="text: wayPoints.durationInMinutes()"></span> minutes
-			</div>
+		</div>
+		<div id="waypoint_total" class="waypoint_detail">
+			<h4>Total</h4>
+			<img src="resources/assets/images/distance-128.png" /><span data-bind="text: wayPoints.distanceInMiles()"></span> miles<br />
+			<img src="resources/assets/images/duration.png" /><span data-bind="text: wayPoints.durationInMinutes()"></span> minutes <a class="clickable" data-bind="click: function() { app.drawWayPointsRoads(true); }">Optimize</a> 
 		</div>
 	</div>
 
@@ -70,6 +77,7 @@
 	<script src="resources/assets/vendor/jquery-ui/jquery-ui-1.12.1.min.js"></script>
 	<script src="resources/assets/vendor/jquery/jquery.appear.js"></script>
 	<script src="resources/assets/vendor/knockout/knockout-3.4.2.min.js"></script>
+	<script src="resources/assets/vendor/iziToast/iziToast.min.js"></script>
 	<%-- App --%>
 	<script src="resources/assets/js/app.js"></script>
 

@@ -19,7 +19,9 @@ let app: App = new App(gmap);
 
 // JQuery load on ready
 $(function() {
-
+    
+    app.toast("Welcome !");
+    
     ko.applyBindings(app);
 
 });

@@ -18,6 +18,19 @@
 .visible { opacity: 1; }
 .big {font-size:1.5em;}
 .center {text-align:center;}
+.clickable { cursor: pointer; }
+.medaillon {
+	border: 3px solid #404040;
+    border-radius: 50px;
+}
+
+a.clickable {
+	color: #e6c6c6;
+	
+	&:hover {
+		color: #fff;
+	}
+}
 
 .text-smaller {
 	font-size: .9em;
@@ -67,9 +80,14 @@ body {
 	
 	&::after {
 		.after();
+		opacity: .2;
 		border-radius: 10px;
 	}
 	
+}
+
+#search-box::after:hover {
+	opacity: 1;
 }
 
 #menu {
@@ -107,21 +125,26 @@ body {
 	}
 }
 
+h4 {
+	margin: 0px;
+	padding: .3em;
+}
+
 #waypoints {
 	
-	position: relative;
+	overflow: auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50px;
+    bottom: 100px;
 	
 	.waypoints_line {
 	    border: 1.5px dashed#d05275;
 	    position: absolute;
 	    left: 17px;
 	    top: 25px;
-	    bottom: 15px;
-	}
-	
-	h4 {
-		margin: 0px;
-		padding: .3em;
+	    bottom: 0px;
 	}
 	
 	ul {
@@ -180,32 +203,32 @@ body {
 		
 	}
 	
-	.waypoint_detail {
-		.text-smaller();
-	    background: #10767b;
-	    padding-left: .5em;
-	    margin: 0em 1em;
-	    border-radius: 5px;
-	    color: #dedede;
-		
-		> img {
-		    height: 20px;
-		    vertical-align: middle;
-		    margin: 0px 2px;
-		}
-	}
-	
-	.waypoint_total {
-		position: relative;
-	    display: block;
-	    bottom: 5px;
-	    left: 0px;
-	    right: 0px;
-	    z-index: 9;
-	    margin-top: 2em;
-	}
-	
+}
 
+.waypoint_detail {
+	.text-smaller();
+    background: #10767b;
+    padding-left: .5em;
+    margin: 0em 1em;
+    border-radius: 5px;
+    color: #dedede;
+	
+	> img {
+	    height: 20px;
+	    vertical-align: middle;
+	    margin: 0px 2px;
+	}
+}
+
+#waypoint_total {
+    position: absolute;
+    display: block;
+    bottom: 10px;
+    left: 0px;
+    right: 0px;
+    z-index: 9;
+    margin-top: 2em;
+    padding: .5em .5em;
 }
 
 .progress_area {
@@ -224,3 +247,35 @@ body {
 	}
 	
 }
+
+#trackin_support {
+	height: 100px;
+	width: 100px;
+	cursor: pointer;
+	background-image: url('../images/trackin_support.png');
+	background-size: 100%;
+	background-repeat: no-repeat;
+	position: absolute;
+	z-index: 9;
+	bottom: 3em;
+	left: 3em;
+}
+
+#trackin_message_area {
+	position: absolute;
+	width: 400px;
+	height: auto;
+	bottom: 100px;
+	right: -380px;
+}
+	
+// Inverse balloon position
+.iziToast.iziToast-balloon::before {
+    border-left: 0 solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 10px solid #000;
+    border-top-color: inherit;
+    left: 8px;
+    right: auto;
+}
+

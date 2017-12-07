@@ -20,7 +20,7 @@ module trackinexercise {
             });
 
             this.map = map;
-            
+
             return map;
         }
 
@@ -118,18 +118,32 @@ module trackinexercise {
             }
         }
 
-        public drawRoute(from, to, fn?: Function): void {
+        public drawRoute(wayPoints: models.WayPoint[], optimize: boolean = false, fn?: Function): void {
 
-            if (!from || !to) {
+            if (!wayPoints || wayPoints.length < 2) {
                 return;
             }
 
             app.calculatingRoute(true);
-            
+
+            // Copy waypoints array
+            let wayPointsRoute: models.WayPoint[] = [].concat(wayPoints);
+            let fromWayPoint: models.WayPoint = wayPointsRoute.shift();
+            let toWayPoint: models.WayPoint = wayPointsRoute.pop();
+
+            let wayPointsMapped: any = wayPointsRoute.map(function(wayPoint: models.WayPoint) {
+                return {
+                    location: wayPoint.marker.position,
+                    stopover: true
+                };
+            });
+
+
             let request = {
-                origin: from,
-                destination: to,
-                optimizeWaypoints: true,
+                origin: fromWayPoint.marker.position,
+                destination: toWayPoint.marker.position,
+                waypoints: wayPointsMapped,
+                optimizeWaypoints: optimize,
                 provideRouteAlternatives: true,
                 unitSystem: google.maps.UnitSystem.IMPERIAL,
                 travelMode: google.maps.TravelMode.DRIVING
@@ -141,15 +155,15 @@ module trackinexercise {
 
                     this.createRoadObject(directions);
                     if ($.isFunction(fn)) {
-                        fn.call(directions);
+                        fn.call(directions, directions, wayPointsRoute);
                     }
                 }
-                
+
                 app.calculatingRoute(false);
-                
+
             });
         }
-
+        
         public initGMap(): void {
 
             this.directionsService = new google.maps.DirectionsService();
@@ -170,7 +184,7 @@ module trackinexercise {
             // Listen for the event fired when the user selects a prediction and retrieve
             // more details for that place.
             searchBox.addListener('places_changed', function() {
-                
+
                 let places = searchBox.getPlaces();
 
                 if (places.length == 0) {

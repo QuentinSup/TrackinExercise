@@ -270,6 +270,19 @@ var trackinexercise;
             return this.wayPointsList();
         };
         /**
+         * Search a WayPoint by location (lat, lng) and return object found
+         */
+        WayPointsManager.prototype.getByLocation = function (location) {
+            var wayPoints = this.all();
+            for (var i = 0; i < wayPoints.length; i++) {
+                var wayPoint = wayPoints[i];
+                if (wayPoint.marker.position.lat() == location.lat() && wayPoint.marker.position.lng() == location.lng()) {
+                    return wayPoint;
+                }
+            }
+            return null;
+        };
+        /**
          * Remove a waypoint from list and databae
          */
         WayPointsManager.prototype.remove = function (wayPoint, fn) {
@@ -391,16 +404,28 @@ var trackinexercise;
                 this.map.setZoom(12);
             }
         };
-        GMap.prototype.drawRoute = function (from, to, fn) {
+        GMap.prototype.drawRoute = function (wayPoints, optimize, fn) {
             var _this = this;
-            if (!from || !to) {
+            if (optimize === void 0) { optimize = false; }
+            if (!wayPoints || wayPoints.length < 2) {
                 return;
             }
             app.calculatingRoute(true);
+            // Copy waypoints array
+            var wayPointsRoute = [].concat(wayPoints);
+            var fromWayPoint = wayPointsRoute.shift();
+            var toWayPoint = wayPointsRoute.pop();
+            var wayPointsMapped = wayPointsRoute.map(function (wayPoint) {
+                return {
+                    location: wayPoint.marker.position,
+                    stopover: true
+                };
+            });
             var request = {
-                origin: from,
-                destination: to,
-                optimizeWaypoints: true,
+                origin: fromWayPoint.marker.position,
+                destination: toWayPoint.marker.position,
+                waypoints: wayPointsMapped,
+                optimizeWaypoints: optimize,
                 provideRouteAlternatives: true,
                 unitSystem: google.maps.UnitSystem.IMPERIAL,
                 travelMode: google.maps.TravelMode.DRIVING
@@ -410,7 +435,7 @@ var trackinexercise;
                 if (status == google.maps.DirectionsStatus.OK) {
                     _this.createRoadObject(directions);
                     if ($.isFunction(fn)) {
-                        fn.call(directions);
+                        fn.call(directions, directions, wayPointsRoute);
                     }
                 }
                 app.calculatingRoute(false);
@@ -482,6 +507,12 @@ var trackinexercise;
 /// <reference path="GMap.cls.ts"/>
 var trackinexercise;
 (function (trackinexercise) {
+    var MESSAGES = [
+        "Use the address bar on the top to add a new delivery stop",
+        "Use drag & drop to modify stop order",
+        "Double-click on the delivery stop icon to change the delivery type (pickup or drop-off)",
+        "Click on 'Optimize' button to optimize the route"
+    ];
     /**
      * Main application class
      */
@@ -496,6 +527,10 @@ var trackinexercise;
             this.driversList = ko.observableArray();
             // Message trigger
             this.calculatingRoute = ko.observable(false);
+            /**
+             * Index of the current message to show
+             */
+            this.messageIndex = 0;
             this.gMap = gMap;
             this.calculatingRoute.subscribe(function (b) {
                 if (b) {
@@ -588,35 +623,51 @@ var trackinexercise;
         /**
          * Draw routes
          */
-        App.prototype.drawWayPointsRoads = function () {
+        App.prototype.drawWayPointsRoads = function (optimize) {
+            var _this = this;
+            if (optimize === void 0) { optimize = false; }
             this.gMap.cleanRoads();
-            var waypointsData = this.wayPoints.all();
-            if (waypointsData.length == 0) {
+            var wayPointsData = this.wayPoints.all();
+            if (wayPointsData.length == 0) {
                 return;
             }
             // First waypoint
-            waypointsData[0].duration(0);
-            waypointsData[0].distance(0);
-            var _loop_1 = function (i) {
-                var wayPointFrom = waypointsData[i - 1];
-                var wayPointTo = waypointsData[i];
-                this_1.gMap.drawRoute(wayPointFrom.getCoordinates(), wayPointTo.getCoordinates(), function () {
-                    var duration = this.routes[0].legs[0].duration.value;
-                    var distance = this.routes[0].legs[0].distance.value;
-                    wayPointTo.duration(duration);
-                    wayPointTo.distance(distance);
-                });
-            };
-            var this_1 = this;
-            for (var i = 1; i < waypointsData.length; i++) {
-                _loop_1(i);
-            }
+            wayPointsData[0].duration(0);
+            wayPointsData[0].distance(0);
+            this.gMap.drawRoute(wayPointsData, optimize, function (directions, wayPointsMapped) {
+                var wayPointsList = [];
+                wayPointsList.push(wayPointsData[0]);
+                for (var i = 0; i < directions.routes[0].legs.length; i++) {
+                    var duration = directions.routes[0].legs[i].duration.value;
+                    var distance = directions.routes[0].legs[i].distance.value;
+                    var newOrder = directions.routes[0].waypoint_order[i];
+                    // Retrieve new waypoint order
+                    var wayPoint = wayPointsMapped[newOrder];
+                    if (!wayPoint) {
+                        // Last waypoint
+                        newOrder = wayPointsData.length - 1;
+                        wayPoint = wayPointsData[newOrder];
+                    }
+                    wayPoint.duration(duration);
+                    wayPoint.distance(distance);
+                    if (wayPoint.position != i + 1) {
+                        // Save new wayPoint position
+                        wayPoint.position = i + 1;
+                        wayPoint.save();
+                    }
+                    wayPointsList.push(wayPoint);
+                }
+                // Update waypoint order
+                _this.wayPoints.wayPointsList([]);
+                _this.wayPoints.wayPointsList(wayPointsList);
+            });
         };
         /**
          * Update and save waypoints position into list
          */
         App.prototype.updateWayPointsPositions = function () {
             var wPoints = [];
+            // Could be optimized to save new ordre with one transaction
             $('#waypoints > ul > li').each(function () {
                 var $item = $(this);
                 var wayPoint = ko.dataFor(this);
@@ -630,6 +681,32 @@ var trackinexercise;
             this.wayPoints.wayPointsList(wPoints);
             // Redraw roads (could be optimized)
             this.drawWayPointsRoads();
+        };
+        /**
+         * Toast a user message
+         */
+        App.prototype.toast = function (text, title) {
+            if (title === void 0) { title = "Quentin says "; }
+            iziToast.show({
+                theme: 'dark',
+                position: 'bottom',
+                balloon: true,
+                title: title,
+                timeout: 7000,
+                message: text,
+                layout: 1,
+                target: '#trackin_message_area'
+            });
+        };
+        /**
+         *
+         */
+        App.prototype.talk = function () {
+            var message = MESSAGES[this.messageIndex++];
+            if (this.messageIndex >= MESSAGES.length) {
+                this.messageIndex = 0;
+            }
+            this.toast(message, 'Need help ?');
         };
         return App;
     }());
@@ -650,6 +727,7 @@ var gmap = new GMap();
 var app = new App(gmap);
 // JQuery load on ready
 $(function () {
+    app.toast("Welcome !");
     ko.applyBindings(app);
 });
 function onMapLoaded() {
