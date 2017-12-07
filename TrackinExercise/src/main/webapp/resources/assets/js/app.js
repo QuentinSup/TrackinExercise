@@ -548,6 +548,12 @@ var trackinexercise;
             this.gMap.initGMap();
             this.retrieveWayPointList();
             this.retrieveDriverList();
+            $('#search-box-area').on('mouseleave', function () {
+                $('#search-box').removeClass('slideInUp').addClass('slideOutDown');
+            });
+            $('#search-box-area').on('mouseenter', function () {
+                $('#search-box').removeClass('slideOutDown').addClass('slideInUp');
+            });
         };
         /**
          * Add new waypoint to tour

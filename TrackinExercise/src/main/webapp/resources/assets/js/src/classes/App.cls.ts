@@ -4,15 +4,15 @@
 module trackinexercise {
 
     declare var iziToast;
-    
+
     const MESSAGES: string[] = [
         "Use the address bar on the top to add a new delivery stop",
         "Use drag & drop to modify stop order",
         "Double-click on the delivery stop icon to change the delivery type (pickup or drop-off)",
         "Click on 'Optimize' button to optimize the route"
     ];
-    
-    
+
+
     /**
      * Main application class
      */
@@ -27,12 +27,12 @@ module trackinexercise {
 
         // Message trigger
         public calculatingRoute: KnockoutObservable<boolean> = ko.observable<boolean>(false);
-        
+
         /**
          * Index of the current message to show
          */
         private messageIndex = 0;
-        
+
         /**
          * Constructor
          */
@@ -56,6 +56,15 @@ module trackinexercise {
             this.gMap.initGMap();
             this.retrieveWayPointList();
             this.retrieveDriverList();
+
+            $('#search-box-area').on('mouseleave', (): void => {
+                $('#search-box').removeClass('slideInUp').addClass('slideOutDown');
+            });
+
+            $('#search-box-area').on('mouseenter', (): void => {
+                $('#search-box').removeClass('slideOutDown').addClass('slideInUp');
+            });
+
         }
 
         /**
@@ -173,29 +182,29 @@ module trackinexercise {
                 let wayPointsList: models.WayPoint[] = [];
                 wayPointsList.push(wayPointsData[0]);
                 for (let i = 0; i < directions.routes[0].legs.length; i++) {
-                    
+
                     let duration: number = directions.routes[0].legs[i].duration.value;
                     let distance: number = directions.routes[0].legs[i].distance.value;
                     let newOrder: number = directions.routes[0].waypoint_order[i];
-                    
+
                     // Retrieve new waypoint order
                     let wayPoint: models.WayPoint = wayPointsMapped[newOrder];
-                    if(!wayPoint) {
+                    if (!wayPoint) {
                         // Last waypoint
                         newOrder = wayPointsData.length - 1;
                         wayPoint = wayPointsData[newOrder];
                     }
                     wayPoint.duration(duration);
                     wayPoint.distance(distance);
-                    if(wayPoint.position != i + 1) {
+                    if (wayPoint.position != i + 1) {
                         // Save new wayPoint position
                         wayPoint.position = i + 1;
-                        wayPoint.save();    
+                        wayPoint.save();
                     }
                     wayPointsList.push(wayPoint);
-                    
+
                 }
-                
+
                 // Update waypoint order
                 this.wayPoints.wayPointsList([]);
                 this.wayPoints.wayPointsList(wayPointsList);
@@ -237,21 +246,21 @@ module trackinexercise {
             iziToast.show({
                 theme: 'dark',
                 position: 'bottom',
-                balloon: true, 
+                balloon: true,
                 title: title,
                 timeout: 7000,
                 message: text,
                 layout: 1,
                 target: '#trackin_message_area'
-            });    
+            });
         }
-        
+
         /**
          * 
          */
         public talk(): void {
             let message: string = MESSAGES[this.messageIndex++];
-            if(this.messageIndex >= MESSAGES.length) {
+            if (this.messageIndex >= MESSAGES.length) {
                 this.messageIndex = 0;
             }
             this.toast(message, 'Need help ?');

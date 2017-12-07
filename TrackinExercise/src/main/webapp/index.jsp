@@ -16,16 +16,19 @@
 </head>
 <body>
 
-	<div id="trackin_support" class="medaillon animated fadeInUp" data-bind="click: function() { app.talk(); }">
-		<div id="trackin_message_area"></div>
-	</div>
-
 	<div id="progress_route" class="progress_area">
 		<span>Calculating route...</span>
 	</div>
 	
-	<div id="search-box" class="animated fadeInDown">
-		<input id="search-input" type="text" placeholder="Address" />
+	<div id="search-box-area">
+	
+		<div id="trackin_support" class="medaillon animated fadeIn" data-bind="click: function() { app.talk(); }">
+			<div id="trackin_message_area"></div>
+		</div>
+	
+		<div id="search-box" class="animated slideOutDown">
+			<input id="search-input" type="text" placeholder="Address" />
+		</div>
 	</div>
 
 	<div id="map"></div>

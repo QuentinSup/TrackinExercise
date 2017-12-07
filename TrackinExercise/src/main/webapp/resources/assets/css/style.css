@@ -213,6 +213,7 @@ body {
   font-weight: 400;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 #map {
   position: absolute;
@@ -229,7 +230,7 @@ body {
   position: absolute;
   z-index: 999;
   font-size: 1.5em;
-  top: 30px;
+  bottom: 30px;
   height: 50px;
   width: 60%;
   left: 50%;
@@ -256,11 +257,15 @@ body {
   z-index: -1;
   opacity: 0.8;
   background-color: #252830;
-  opacity: .2;
   border-radius: 10px;
 }
-#search-box::after:hover {
-  opacity: 1;
+#search-box-area {
+  position: absolute;
+  z-index: 8;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
 }
 #menu {
   position: absolute;
