@@ -7,6 +7,7 @@
 	<packaging>war</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<m2eclipse.wtp.contextRoot>/</m2eclipse.wtp.contextRoot>
 	</properties>
 	<build>
 		<plugins>
@@ -20,6 +21,35 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.github.kongchen</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<apiSources>
+						<apiSource>
+							<springmvc>true</springmvc>
+							<locations>fr.clevertech.exercise.trackin.controllers</locations>
+							<basePath>/api</basePath>
+							<schemes>http</schemes>
+							<host>/</host>
+							<info>
+								<title>Trackin Exercise API</title>
+								<version>v1</version>
+								<description>API used by the Trackin Exercise HMI</description>
+								<contact>
+									<email>qsupernant@gmail.com</email>
+									<name>Quentin Supernant</name>
+									<url>https://www.linkedin.com/in/quentin-supernant-a7008731</url>
+								</contact>
+							</info>
+							<templatePath>${basedir}/src/main/swagger/templates/strapdown.html.hbs</templatePath>
+							<outputPath>${basedir}/src/main/webapp/resources/trackin_api.html</outputPath>
+							<swaggerDirectory>src/main/swagger/generated/swagger-ui</swaggerDirectory>
+						</apiSource>
+					</apiSources>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -53,9 +83,9 @@
 			<version>20171018</version>
 		</dependency>
 		<dependency>
-		    <groupId>com.google.code.gson</groupId>
-		    <artifactId>gson</artifactId>
-		    <version>1.7.1</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>1.7.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
@@ -68,5 +98,12 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.35</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.swagger/swagger-core -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>1.5.17</version>
+		</dependency>
+
 	</dependencies>
 </project>
