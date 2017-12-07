@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 @Controller
 @RequestMapping("/") // Catch calls from root path
-@Scope("singleton") // Make controller singleton
+@Scope("singleton") // Make controller singleton (DO NOT CHANGE!)
 public class Application {
 
 	// Logger
@@ -31,10 +31,6 @@ public class Application {
 	 * Database session factory
 	 */
 	private static SessionFactory sessionFactory;
-	/**
-	 * Database session singleton
-	 */
-	private static Session session;
 
 	// Static methods
 	
@@ -51,11 +47,8 @@ public class Application {
 	 * 
 	 * @return
 	 */
-	public static Session getActiveSession() {
-		if (session == null || !session.isConnected()) {
-			session = sessionFactory.openSession();
-		}
-		return session;
+	public static Session getSession() {
+		return sessionFactory.openSession();
 	}
 	
 	// Class methods

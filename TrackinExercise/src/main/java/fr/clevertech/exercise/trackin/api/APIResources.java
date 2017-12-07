@@ -2,10 +2,7 @@ package fr.clevertech.exercise.trackin.api;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,6 +17,7 @@ import com.google.gson.GsonBuilder;
 
 import fr.clevertech.exercise.trackin.controllers.Application;
 import fr.clevertech.exercise.trackin.model.AbstractModel;
+import io.swagger.annotations.Api;
 
 /**
  * API Model resources
@@ -62,14 +60,13 @@ public abstract class APIResources<T extends AbstractModel> {
 	 */
 	private T retrieveModelObject(final String id, final String jsonValue) throws InstantiationException, IllegalAccessException {
 
-		// Get hibernate session factory
-		final Session session = Application.getActiveSession();
-
+		// Get hibernate session
+		final Session session = Application.getSession();
 		T model;
 
 		if (id != null && !"".equals(id.trim())) {
 			// Get model from session
-			model = (T) session.load(this.classModel, new Integer(id));
+			model = (T) session.get(this.classModel, new Integer(id));
 			if (model == null) {
 				// If not, create driver object
 				model = (T)this.classModel.newInstance();
@@ -96,16 +93,15 @@ public abstract class APIResources<T extends AbstractModel> {
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 */
-	@RequestMapping(method = RequestMethod.POST, produces = "application/json; charset=UTF-8")
-	public ResponseEntity<String> create(@RequestBody String jsonValue) throws InstantiationException, IllegalAccessException {
+	public ResponseEntity<String> create(String jsonValue) throws InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug(String.format("Create a new object with json data : %s", jsonValue));
 		}
-
-		// Get hibernate session factory
-		final SessionFactory factory = Application.getSessionFactory();
-		if (!factory.isOpen()) {
+		
+		// Get hibernate session 
+		final Session session = Application.getSession();
+		if (!session.isOpen() || !session.isConnected()) {
 			logger.error("Not connected to the database");
 			// Return HttpStatus 412
 			return new ResponseEntity<String>(HttpStatus.PRECONDITION_FAILED);
@@ -122,20 +118,15 @@ public abstract class APIResources<T extends AbstractModel> {
 		if (logger.isTraceEnabled()) {
 			logger.trace(String.format("Add new model '%s' data", model.getClass()));
 		}
-
-		// Save
-		final EntityManager manager = factory.createEntityManager();
-
-		// Remove data from database
+		
+		// Save data to database
 		try {
-			manager.getTransaction().begin();
-			manager.persist(model);
-			manager.getTransaction().commit();
+			session.save(model);
+			session.close();
 			// Return HttpStatus 200 for Success
 			return new ResponseEntity<String>(HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			manager.getTransaction().rollback();
 			// Return HttpStatus 500
 			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -148,7 +139,6 @@ public abstract class APIResources<T extends AbstractModel> {
 	 * @param json
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
 	public ResponseEntity<String> list() {
 
 		if (logger.isDebugEnabled()) {
@@ -156,7 +146,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		}
 
 		// Get hibernate session factory
-		final Session session = Application.getActiveSession();
+		final Session session = Application.getSession();
 		if (!session.isOpen() || !session.isConnected()) {
 			logger.error("Not connected to the database");
 			// Return HttpStatus 412
@@ -170,7 +160,8 @@ public abstract class APIResources<T extends AbstractModel> {
 		// Retrieve data from database
 		@SuppressWarnings("unchecked")
 		List<T> models = (List<T>) session.createQuery(String.format("from %s" + (this.orderBy == null?"":" ORDER BY " + this.orderBy), this.classModel.getSimpleName())).list();
-
+		session.close();
+		
 		// Convert into json
 		final Gson gson = new GsonBuilder().create();
 		final String jsonValue = gson.toJson(models);
@@ -187,15 +178,14 @@ public abstract class APIResources<T extends AbstractModel> {
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 */
-	@RequestMapping(method = RequestMethod.DELETE, value = "/{model_id}")
-	public synchronized ResponseEntity<String> remove(@PathVariable("model_id") final String id) throws NumberFormatException, InstantiationException, IllegalAccessException {
+	public ResponseEntity<String> remove(final String id) throws NumberFormatException, InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug(String.format("Remove an object with id : %s", id));
 		}
 
 		// Get hibernate session factory
-		final Session session = Application.getActiveSession();
+		final Session session = Application.getSession();
 		if (!session.isOpen() || !session.isConnected()) {
 			logger.error("Not connected to the database");
 			// Return HttpStatus 412
@@ -211,14 +201,14 @@ public abstract class APIResources<T extends AbstractModel> {
 
 		// Remove data from database
 		try {
-			session.getTransaction().begin();
+			session.beginTransaction();
 			session.delete(model);
 			session.getTransaction().commit();
+			session.close();
 			// Return HttpStatus 200
 			return new ResponseEntity<String>(HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			session.getTransaction().rollback();
 			// Return HttpStatus 500
 			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -233,8 +223,7 @@ public abstract class APIResources<T extends AbstractModel> {
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 */
-	@RequestMapping(method = RequestMethod.PUT, value = "/{model_id}")
-	public synchronized ResponseEntity<String> update(@PathVariable("model_id") final String id, @RequestBody String jsonValue)
+	public ResponseEntity<String> update(final String id, String jsonValue)
 			throws NumberFormatException, InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
@@ -242,7 +231,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		}
 
 		// Get hibernate session factory
-		final Session session = Application.getActiveSession();
+		final Session session = Application.getSession();
 		if (!session.isOpen() || !session.isConnected()) {
 			logger.error("Not connected to the database");
 			// Return HttpStatus 412
@@ -250,7 +239,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		}
 
 		if (logger.isTraceEnabled()) {
-			logger.trace("Update driver from database");
+			logger.trace(String.format("Update model '%s' from database", this.classModel.getSimpleName()));
 		}
 
 		// Get driver
@@ -258,14 +247,14 @@ public abstract class APIResources<T extends AbstractModel> {
 
 		// Remove data from database
 		try {
-			session.getTransaction().begin();
-			session.persist(model);
+			session.beginTransaction();
+			session.update(model);
 			session.getTransaction().commit();
+			session.close();
 			// Return HttpStatus 200
 			return new ResponseEntity<String>(HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			session.getTransaction().rollback();
 			// Return HttpStatus 500
 			return new ResponseEntity<String>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
