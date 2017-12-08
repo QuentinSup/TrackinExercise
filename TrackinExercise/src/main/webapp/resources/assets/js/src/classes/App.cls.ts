@@ -1,4 +1,3 @@
-/// <reference path="WayPointsManager.cls.ts"/>
 /// <reference path="GMap.cls.ts"/>
 
 module trackinexercise {
@@ -20,13 +19,16 @@ module trackinexercise {
 
         // GMap instance
         public gMap: GMap;
-        // Waypoints manager
-        public wayPoints: WayPointsManager = new WayPointsManager();
+        // Current Tour
+        public currentTour: KnockoutObservable<models.Tour> = ko.observable<models.Tour>();
         // Drivers
-        public driversList: KnockoutObservableArray<models.Driver> = ko.observableArray<models.Driver>();
+        public drivers: KnockoutObservableArray<models.Driver> = ko.observableArray<models.Driver>();
 
         // Message trigger
         public calculatingRoute: KnockoutObservable<boolean> = ko.observable<boolean>(false);
+
+        // Current driver selection
+        public selectedDriver: KnockoutObservable<models.Driver> = ko.observable<models.Driver>();
 
         /**
          * Index of the current message to show
@@ -50,28 +52,52 @@ module trackinexercise {
         }
 
         /**
+         * Update current tour driver
+         */
+        public updateTourDriver(driver: models.Driver): void {
+
+            this.selectedDriver(driver);
+            this.currentTour().driverId = driver.id;
+            this.currentTour().save();
+
+        }
+
+        /**
          * Initialization
          */
         public init(): void {
             this.gMap.initGMap();
-            this.retrieveWayPointList();
-            this.retrieveDriverList();
-
-            $('#search-box-area').on('mouseleave', (): void => {
-                $('#search-box').removeClass('slideInUp').addClass('slideOutDown');
+            this.retrieveDriverList((): void => {
+                this.retrieveCurrentRoute();
             });
+            // Show HMI with animation
+            this.initUXAnimationSequence();
+        }
 
-            $('#search-box-area').on('mouseenter', (): void => {
-                $('#search-box').removeClass('slideOutDown').addClass('slideInUp');
-            });
+        /**
+         * Initialise HMI animation
+         */
+        private initUXAnimationSequence(): void {
 
+            setTimeout((): void => {
+                $('#search-box').addClass('animated slideInDown');
+            }, 1000);
+
+            setTimeout((): void => {
+                $('#trackin_support').addClass('animated fadeIn');
+                this.toast("Welcome ! Need help ? Click on me !");
+            }, 1500);
+
+            setTimeout((): void => {
+                $('#tour').addClass('animated slideInRight');
+            }, 2000);
         }
 
         /**
          * Add new waypoint to tour
          */
         public addWayPoint(wayPoint: models.WayPoint): void {
-            this.wayPoints.create(wayPoint, (): void => {
+            this.currentTour().push(wayPoint, (): void => {
 
                 // Add marker
                 this.gMap.addWayPointMarker(wayPoint);
@@ -79,16 +105,15 @@ module trackinexercise {
                 // Draw roads
                 this.drawWayPointsRoads();
             });
-
-
         }
 
         /**
          * Remove waypoint from tour
          */
         public removeWayPoint(wayPoint: models.WayPoint): void {
-            this.wayPoints.remove(wayPoint, (): void => {
+            this.currentTour().detach(wayPoint, (): void => {
 
+                wayPoint.marker.setMap(null);
                 wayPoint.marker = null;
 
                 // Redraw roads (could be optimized)
@@ -99,24 +124,32 @@ module trackinexercise {
         /**
          * Retrieve waypoints from tour
          */
-        public retrieveWayPointList(): void {
+        public retrieveCurrentRoute(): void {
 
-            this.wayPoints.list((wayPoints: models.WayPoint[]): void => {
+            new models.Tour().list((data: any): void => {
+                
+                // Note : for the demo, only one route
+                let tour: models.Tour = new models.Tour(data[0]);
 
-                // Add markers
-                $.each(wayPoints, (k, wayPoint: models.WayPoint): void => {
-                    this.gMap.addWayPointMarker(wayPoint);
+                this.currentTour(tour);
+                this.selectedDriver(this.getDriverById(tour.driverId));
+                this.currentTour().loadWayPoints((wayPoints: models.WayPoint[]): void => {
+
+                    // Add markers
+                    $.each(wayPoints, (k, wayPoint: models.WayPoint): void => {
+                        this.gMap.addWayPointMarker(wayPoint);
+                    });
+
+                    // Draw roads
+                    this.drawWayPointsRoads();
+
+                    $('#waypoints ul.sortable').sortable({
+                        update: (event, ui): void => {
+                            this.updateWayPointsPositions();
+                        }
+                    });
+
                 });
-
-                // Draw roads
-                this.drawWayPointsRoads();
-
-                $('#waypoints > ul').sortable({
-                    update: (event, ui): void => {
-                        this.updateWayPointsPositions();
-                    }
-                });
-
             });
         }
 
@@ -124,8 +157,6 @@ module trackinexercise {
          * Retrieve drivers
          */
         public retrieveDriverList(fn?: Function): void {
-
-
 
             new models.Driver().list((data): void => {
 
@@ -135,14 +166,28 @@ module trackinexercise {
                     drivers.push(new models.Driver(driverJson));
                 });
 
-                this.driversList(drivers);
+                this.drivers(drivers);
 
                 if ($.isFunction(fn)) {
-                    fn.call(this, this.driversList());
+                    fn.call(this, this.drivers());
                 }
 
             });
 
+        }
+        
+        /**
+         * Search a driver by is id
+         */
+        public getDriverById(id: number): models.Driver {
+            let drivers: models.Driver[] = this.drivers();
+            for(let i = 0; i < drivers.length; i++) {
+                let driver: models.Driver = drivers[i];
+                if(driver.id == id) {
+                    return driver;    
+                }
+            }
+            return null;
         }
 
         /**
@@ -151,7 +196,7 @@ module trackinexercise {
         public centerBounds(): void {
             // For each place, get the icon, name and location.
             let bounds = new google.maps.LatLngBounds();
-            let wayPoints: models.WayPoint[] = this.wayPoints.all();
+            let wayPoints: models.WayPoint[] = this.currentTour().all();
 
             for (let i = 0; i < wayPoints.length; i++) {
                 let wayPoint: models.WayPoint = wayPoints[i];
@@ -168,7 +213,7 @@ module trackinexercise {
 
             this.gMap.cleanRoads();
 
-            let wayPointsData: models.WayPoint[] = this.wayPoints.all();
+            let wayPointsData: models.WayPoint[] = this.currentTour().all();
 
             if (wayPointsData.length == 0) {
                 return;
@@ -205,9 +250,40 @@ module trackinexercise {
 
                 }
 
+                // Get global duration to calculate gain
+                let duration: number = this.currentTour().durationInMinutes();
+
                 // Update waypoint order
-                this.wayPoints.wayPointsList([]);
-                this.wayPoints.wayPointsList(wayPointsList);
+                this.currentTour().wayPoints([]);
+                this.currentTour().wayPoints(wayPointsList);
+
+                if (duration != 0) {
+                    // Get global duration to calculate gain
+                    setTimeout((): void => {
+
+                        let minutesDiff = duration - this.currentTour().durationInMinutes();
+
+                        // Toast a message
+                        if (optimize) {
+                            if (minutesDiff > 0) {
+                                this.toast("Well done ! Tour has been optimized (" + minutesDiff + " minutes saved) !");
+                            } else {
+                                this.toast("All right ! Tour is already optimized");
+                            }
+                        } else {
+                            if (minutesDiff != 0) {
+                                if (minutesDiff > 0) {
+                                    // Tour is shorter
+                                    this.toast("Tour has been updated (" + -minutesDiff + "minutes)");
+                                } else {
+                                    // Tour is longer
+                                    this.toast("Tour has been updated (+" + -minutesDiff + " minutes)");
+                                }
+                            }
+                        }
+                    }, 500); // use timeout because of throttle delay of durationInMinutes() calculation
+                }
+                
             });
 
         }
@@ -220,7 +296,7 @@ module trackinexercise {
             let wPoints: models.WayPoint[] = [];
 
             // Could be optimized to save new ordre with one transaction
-            $('#waypoints > ul > li').each(function() {
+            $('#waypoints ul.sortable > li').each(function() {
                 let $item = $(this);
                 let wayPoint = ko.dataFor(this);
                 if (wayPoint.position != $item.index()) {
@@ -231,11 +307,10 @@ module trackinexercise {
             });
 
             // Update waypoint list order
-            this.wayPoints.wayPointsList(wPoints);
+            this.currentTour().wayPoints(wPoints);
 
             // Redraw roads (could be optimized)
             this.drawWayPointsRoads();
-
 
         }
 
@@ -256,7 +331,7 @@ module trackinexercise {
         }
 
         /**
-         * 
+         * Rotate user message and toast it
          */
         public talk(): void {
             let message: string = MESSAGES[this.messageIndex++];

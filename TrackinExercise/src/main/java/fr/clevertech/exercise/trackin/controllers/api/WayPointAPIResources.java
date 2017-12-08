@@ -17,9 +17,12 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 /**
- * API WayPoints resources GET /api/waypoints POST /api/waypoints PUT
- * /api/waypoints/{waypoint_id} DELETE /api/waypoints/{waypoint_id}
- * 
+ * API WayPoints resources 
+ * GET /api/waypoints 
+ * POST /api/waypoints
+ * GET /api/waypoints/{waypoint_id}
+ * PUT /api/waypoints/{waypoint_id} 
+ * DELETE /api/waypoints/{waypoint_id}
  * @author QuentinSup
  */
 @Controller
@@ -46,7 +49,7 @@ public class WayPointAPIResources extends APIResources<WayPoint> {
 		// Parse json value
 		JSONObject json = new JSONObject(jsonValue);
 
-		// Create waypoint
+		// Populate waypoint data
 		waypoint.setLabel(json.optString("label", "No label"));
 		waypoint.setLatitude(json.optString("latitude", "0"));
 		waypoint.setLongitude(json.optString("longitude", "0"));
@@ -72,6 +75,24 @@ public class WayPointAPIResources extends APIResources<WayPoint> {
 	public ResponseEntity<String> create(@ApiParam(value = "waypoint json data", required = true) @RequestBody String jsonValue)
 			throws InstantiationException, IllegalAccessException {
 		return super.create(jsonValue);
+	}
+	
+	/**
+	 * GET Return a waypoint from given id
+	 * 
+	 * @param id waypoint identifier
+	 * @return
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 */
+	@ApiOperation(httpMethod = "GET", produces = "application/json; charset=UTF-8", value = "Return a waypoint from id", response = WayPoint.class)
+	@ApiResponses({ @ApiResponse(code = 200, message = "OK"),
+			@ApiResponse(code = 412, message = "Not connected to database"),
+			@ApiResponse(code = 500, message = "Internal server error") })
+	@RequestMapping(method = RequestMethod.GET, value = "/{waypoint_id}", produces = "application/json; charset=UTF-8")
+	@Override
+	public ResponseEntity<String> load(@ApiParam(value = "waypoint identifier") @PathVariable("waypoint_id") final String id) throws InstantiationException, IllegalAccessException {
+		return super.load(id);
 	}
 
 	/**

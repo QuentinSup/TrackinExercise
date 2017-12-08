@@ -9,6 +9,9 @@ module trackinexercise {
         public infoWindow: any;
         public roads = [];
 
+        /**
+         * Initialize map and center San Francisco city ;)
+         */
         private initMap(): void {
 
             // San Francisco
@@ -24,6 +27,9 @@ module trackinexercise {
             return map;
         }
 
+        /**
+         * Create route from directions
+         */
         public createRoadObject(directions): void {
 
             for (let i = 0; i < directions.routes.length; i++) {
@@ -61,6 +67,9 @@ module trackinexercise {
 
         }
 
+        /**
+         * Clean roads
+         */
         public cleanRoads(): void {
             for (let i = 0; i < this.roads.length; i++) {
                 let road = this.roads[i];
@@ -69,6 +78,9 @@ module trackinexercise {
             this.roads = [];
         }
 
+        /**
+         * Add a marker at a waypoint position
+         */
         public addWayPointMarker(waypoint: models.WayPoint): void {
 
             if (waypoint.marker) {
@@ -79,7 +91,7 @@ module trackinexercise {
                 position: { lat: parseFloat(waypoint.latitude), lng: parseFloat(waypoint.longitude) },
                 map: this.map,
                 icon: {
-                    url: waypoint.type() == 1 ? 'resources/assets/images/dropoff-icon.png' : 'resources/assets/images/pickup-icon.png',
+                    url: waypoint.getIcon(),
                     scaledSize: new google.maps.Size(35, 35)
                 },
                 title: waypoint.label,
@@ -111,6 +123,9 @@ module trackinexercise {
             return marker;
         }
 
+        /**
+         * Centerize map on waypoints route bounds
+         */
         public centerizeWayPoint(wayPoint: models.WayPoint): void {
             this.map.panTo(wayPoint.marker.position);
             if (this.map.getZoom() < 12) {
@@ -118,6 +133,9 @@ module trackinexercise {
             }
         }
 
+        /**
+         * Calculate and draw route between waypoints
+         */
         public drawRoute(wayPoints: models.WayPoint[], optimize: boolean = false, fn?: Function): void {
 
             if (!wayPoints || wayPoints.length < 2) {
@@ -164,6 +182,9 @@ module trackinexercise {
             });
         }
         
+        /**
+         * Callback from google load
+         */
         public initGMap(): void {
 
             this.directionsService = new google.maps.DirectionsService();

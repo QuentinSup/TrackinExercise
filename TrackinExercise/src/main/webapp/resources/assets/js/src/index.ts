@@ -4,7 +4,7 @@
 /// <reference path="./classes/commons/API.cls.ts"/>
 /// <reference path="./models/WayPoint.cls.ts"/>
 /// <reference path="./models/Driver.cls.ts"/>
-/// <reference path="./classes/WayPointsManager.cls.ts"/>
+/// <reference path="./models/Tour.cls.ts"/>
 /// <reference path="./classes/GMap.cls.ts"/>
 /// <reference path="./classes/App.cls.ts"/>
 
@@ -19,11 +19,9 @@ let app: App = new App(gmap);
 
 // JQuery load on ready
 $(function() {
-    
-    app.toast("Welcome !");
-    
     ko.applyBindings(app);
-
+    $(".nano").nanoScroller();
+    $("[title]").tooltipster();
 });
 
 function onMapLoaded() {

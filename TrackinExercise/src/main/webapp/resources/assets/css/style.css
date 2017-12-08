@@ -183,6 +183,12 @@ th {
 .hiding {
   opacity: 0;
 }
+.hidden {
+  visibility: hidden;
+}
+.animated {
+  visibility: visible;
+}
 .visible {
   opacity: 1;
 }
@@ -226,17 +232,19 @@ body {
   position: absolute;
   z-index: 999;
 }
-#search-box {
+a#search-box {
   position: absolute;
   z-index: 999;
-  font-size: 1.5em;
-  bottom: 30px;
-  height: 50px;
+  font-size: 1em;
+  top: 30px;
+  height: 35px;
   width: 60%;
   left: 50%;
   margin-left: -30%;
+  opacity: .2;
+  transition: opacity 3s;
 }
-#search-box > input {
+a#search-box > input {
   position: absolute;
   bottom: 5px;
   top: 5px;
@@ -246,7 +254,10 @@ body {
   color: #fff;
   padding: 0em .5em;
 }
-#search-box::after {
+a#search-box > input:focus {
+  outline: inherit;
+}
+a#search-box::after {
   content: '';
   display: block;
   position: absolute;
@@ -257,15 +268,11 @@ body {
   z-index: -1;
   opacity: 0.8;
   background-color: #252830;
-  border-radius: 10px;
+  border-radius: 3px;
 }
-#search-box-area {
-  position: absolute;
-  z-index: 8;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 150px;
+a#search-box:hover {
+  opacity: 1;
+  transition: opacity 1s;
 }
 #menu {
   position: absolute;
@@ -292,28 +299,87 @@ body {
   background-color: #101010;
   border: 3px solid #000000;
 }
-#drivers > ul {
+#drivers {
+  padding: .5em;
+}
+#drivers .select_box {
+  position: relative;
+  z-index: 2;
+}
+#drivers .select_box img {
+  display: inline-block;
+  height: 25px;
+  vertical-align: middle;
+}
+#drivers .select_box > .select_box_value {
+  padding: .5em 1em;
+  border: 1px solid #404040;
+  border-radius: 3px;
+  cursor: pointer;
+}
+#drivers .select_box > .select_box_list {
+  height: 150px;
+  display: none;
+  z-index: 2;
+  position: absolute;
+  top: 0px;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  margin-left: 0px;
+  margin-top: 40px;
+}
+#drivers .select_box > .select_box_list :after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+}
+#drivers .select_box > .select_box_list > ul {
   padding: 0;
   margin: 0;
-  margin-left: 20px;
-  margin-top: 15px;
 }
-#drivers > ul > li {
+#drivers .select_box > .select_box_list > ul > li {
+  font-size: .9em;
+  cursor: pointer;
   list-style: none;
-  padding: .1em;
+  padding: .5em 1em;
   margin: 0;
+  position: relative;
+}
+#drivers .select_box > .select_box_list > ul > li:hover:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+  background-color: #dedede;
+}
+#drivers .select_box:hover > .select_box_list {
+  display: block;
 }
 h4 {
   margin: 0px;
   padding: .3em;
 }
 #waypoints {
-  overflow: auto;
   position: absolute;
   left: 0;
   right: 0;
   top: 50px;
   bottom: 100px;
+  height: auto;
 }
 #waypoints .waypoints_line {
   border: 1.5px dashed#d05275;
@@ -375,7 +441,7 @@ h4 {
   border-radius: 5px;
   color: #dedede;
 }
-.waypoint_detail > img {
+.waypoint_detail img {
   height: 20px;
   vertical-align: middle;
   margin: 0px 2px;
@@ -387,13 +453,14 @@ h4 {
   left: 0px;
   right: 0px;
   z-index: 9;
-  margin-top: 2em;
   padding: .5em .5em;
 }
 .progress_area {
+  opacity: 0;
   position: absolute;
-  left: 50px;
-  bottom: 50px;
+  left: 50%;
+  width: 200px;
+  margin-left: -100px;
   padding: .5em 1.5em;
   color: #fff;
   font-weight: bold;
@@ -438,4 +505,87 @@ h4 {
   border-top-color: inherit;
   left: 8px;
   right: auto;
+}
+.pac-container {
+  background: transparent;
+  border: 0px;
+  margin-top: 5px;
+}
+.pac-container .pac-item {
+  border: 0px;
+  color: #fff;
+  position: relative;
+}
+.pac-container .pac-item.pac-item-selected {
+  background: transparent;
+}
+.pac-container .pac-item.pac-item-selected:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+}
+.pac-container .pac-item:hover {
+  background: transparent;
+}
+.pac-container .pac-item:hover:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+}
+.pac-container .pac-item-query {
+  color: #aed9ff;
+  font-weight: bold;
+}
+.pac-container .pac-matched {
+  font-weight: normal;
+}
+.pac-container:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: #252830;
+  height: auto;
+  padding: 0;
+  background-image: none;
+}
+/* TOOLTIPSTER */
+/* This is the default Tooltipster theme (feel free to modify or duplicate and create multiple themes!): */
+.tooltipster-default {
+  border-radius: 2px;
+  background: #404040;
+  border: 1px solid transparent;
+  color: #fff;
+  /* Use this next selector to style things like font-size and line-height: */
+  /* This next selector defines the color of the border on the outside of the arrow. This will automatically match the color and size of the border set on the main tooltip styles. Set display: none; if you would like a border around the tooltip but no border around the arrow */
+}
+.tooltipster-default .tooltipster-content {
+  padding: 0.5em;
+  font-size: 14px;
+  font-family: 'Open Sans', sans-serif;
+  overflow: hidden;
+  line-height: 1.2em;
+  max-width: 300px;
+}
+.tooltipster-default .tooltipster-arrow .tooltipster-arrow-border {
+  /* border-color: ... !important; */
 }

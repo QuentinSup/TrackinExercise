@@ -21,6 +21,13 @@ module trackinexercise.models {
             }
 
         }
+        
+        /**
+         * Return driver firstName and lastName
+         */
+        public fullName(): string {
+            return this.firstName + ' ' + this.lastName;    
+        }
 
         // Return driver data
         public data(): any {

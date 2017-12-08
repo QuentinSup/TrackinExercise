@@ -6,7 +6,7 @@
 #Trackin Exercise API
 
 
-##  | :///api
+## HTTP:////api
 
 
 API used by the Trackin Exercise HMI
@@ -67,6 +67,238 @@ API used by the Trackin Exercise HMI
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 200    | OK | <a href="#/definitions/Driver">Driver</a>|
+| 412    | Not connected to database |  - |
+| 500    | Internal server error |  - |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## /api/tours
+
+
+### GET
+
+<a id="list">Return list of tours</a>
+
+
+
+
+
+
+
+
+
+#### Request
+
+
+
+##### Parameters
+
+
+
+
+
+
+#### Response
+
+**Content-Type: ** application/json; charset=UTF-8
+
+
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | OK | <a href="#/definitions/Tour">Tour</a>|
+| 412    | Not connected to database |  - |
+| 500    | Internal server error |  - |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## /api/tours/{tour_id}
+
+
+
+
+### PUT
+
+<a id="update">Update a tour</a>
+
+
+
+
+
+
+
+
+
+#### Request
+
+
+
+##### Parameters
+
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Located in</th>
+        <th>Required</th>
+        <th>Description</th>
+        <th>Default</th>
+        <th>Schema</th>
+    </tr>
+
+
+
+<tr>
+    <th>tour_id</th>
+    <td>path</td>
+    <td>yes</td>
+    <td>
+        tour identifier
+        
+    </td>
+    <td> - </td>
+
+    
+            <td>string </td>
+    
+
+</tr>
+
+<tr>
+    <th>body</th>
+    <td>body</td>
+    <td>yes</td>
+    <td>
+        tour json data
+        
+    </td>
+    <td> - </td>
+
+    <td>
+    
+    
+    </td>
+
+</tr>
+
+
+</table>
+
+
+
+#### Response
+
+
+
+
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | SUCCESS | |
+| 412    | Not connected to database |  - |
+| 500    | Internal server error |  - |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## /api/tours/{tour_id}/waypoints
+
+
+### GET
+
+<a id="listWaypoints">Return all waypoints from a tour</a>
+
+
+
+
+
+
+
+
+
+#### Request
+
+
+
+##### Parameters
+
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Located in</th>
+        <th>Required</th>
+        <th>Description</th>
+        <th>Default</th>
+        <th>Schema</th>
+    </tr>
+
+
+
+<tr>
+    <th>tour_id</th>
+    <td>path</td>
+    <td>yes</td>
+    <td>
+        tour identifier
+        
+    </td>
+    <td> - </td>
+
+    
+            <td>string </td>
+    
+
+</tr>
+
+
+</table>
+
+
+
+#### Response
+
+**Content-Type: ** application/json; charset=UTF-8
+
+
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | OK | <a href="#/definitions/Tour">Tour</a>|
 | 412    | Not connected to database |  - |
 | 500    | Internal server error |  - |
 
@@ -206,6 +438,69 @@ API used by the Trackin Exercise HMI
 
 
 ## /api/waypoints/{waypoint_id}
+
+
+### GET
+
+<a id="load">Return a waypoint from id</a>
+
+
+
+
+
+
+
+
+
+#### Request
+
+
+
+##### Parameters
+
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Located in</th>
+        <th>Required</th>
+        <th>Description</th>
+        <th>Default</th>
+        <th>Schema</th>
+    </tr>
+
+
+
+<tr>
+    <th>waypoint_id</th>
+    <td>path</td>
+    <td>yes</td>
+    <td>
+        waypoint identifier
+        
+    </td>
+    <td> - </td>
+
+    
+            <td>string </td>
+    
+
+</tr>
+
+
+</table>
+
+
+
+#### Response
+
+**Content-Type: ** application/json; charset=UTF-8
+
+
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 200    | OK | <a href="#/definitions/WayPoint">WayPoint</a>|
+| 412    | Not connected to database |  - |
+| 500    | Internal server error |  - |
 
 
 
@@ -421,6 +716,45 @@ API used by the Trackin Exercise HMI
     
         <tr>
             <td>gender</td>
+            <td>
+                
+                    
+                    integer (int32)
+                
+            </td>
+            <td>optional</td>
+            <td>-</td>
+            <td></td>
+        </tr>
+    
+</table>
+
+## <a name="/definitions/Tour">Tour</a>
+
+<table border="1">
+    <tr>
+        <th>name</th>
+        <th>type</th>
+        <th>required</th>
+        <th>description</th>
+        <th>example</th>
+    </tr>
+    
+        <tr>
+            <td>id</td>
+            <td>
+                
+                    
+                    integer (int32)
+                
+            </td>
+            <td>optional</td>
+            <td>-</td>
+            <td></td>
+        </tr>
+    
+        <tr>
+            <td>driverId</td>
             <td>
                 
                     

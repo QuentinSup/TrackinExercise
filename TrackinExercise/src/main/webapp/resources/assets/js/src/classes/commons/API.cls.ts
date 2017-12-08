@@ -1,19 +1,34 @@
 module trackinexercise.commons {
 
+    /**
+     * Use this class to simplify REST request
+     */
     export abstract class API implements commons.APIResourceInterface {
 
+        /**
+         * Common attribute id
+         */
         public id: number;
-     
+        
+        /**
+         * API uri
+         */
         private uri: string;
 
         constructor(uri: string) {
             this.uri = uri;
         }
 
+        /**
+         * Returne API uri
+         */
         public getUri(): string {
             return this.uri;
         }
 
+        /**
+         * Execute a POST request
+         */
         public create(fn?: Function): void {
             $.ajax({
                 method: 'POST',
@@ -32,6 +47,9 @@ module trackinexercise.commons {
             });
         }
 
+        /**
+         * Execute a PUT request
+         */
         public update(fn?: Function): void {
             $.ajax({
                 method: 'PUT',
@@ -47,6 +65,9 @@ module trackinexercise.commons {
             });
         }
 
+        /**
+         * Execute a DELETE request
+         */
         public remove(fn?: Function): void {
             $.ajax({
                 method: 'DELETE',
@@ -62,7 +83,25 @@ module trackinexercise.commons {
 
             });
         }
+        
+        /**
+         * Execute a GET request
+         */
+        public load(id: string, fn?: Function): void {
+            $.getJSON(this.uri + '/' + id).done((data): void => {
 
+                this.fromJson(data);
+                
+                if ($.isFunction(fn)) {
+                    fn.call(this, data);
+                }
+
+            });
+        }
+
+        /**
+         * Execute a GET request
+         */
         public list(fn?: Function): void {
             $.getJSON(this.uri).done((data): void => {
 
@@ -72,7 +111,26 @@ module trackinexercise.commons {
 
             });
         }
+        
+        /**
+         * Execute a GET request for a sub operation resource
+         */
+        public sublist(operation: string, fn?: Function): void {
+            $.getJSON(this.uri + '/' + this.id + '/' + operation).done((data): void => {
 
+                if ($.isFunction(fn)) {
+                    fn.call(this, data);
+                }
+
+            });
+        }
+
+        /**
+         * Save data depending on id
+         * No id => create
+         * id => update
+         * id = -1 => remove
+         */
         public save(fn?: Function): void {
 
             if (!this.id) {
@@ -92,7 +150,9 @@ module trackinexercise.commons {
             return JSON.stringify(this.data());
         }
 
+        // Abstract methods to implement
         abstract data(): any;
+        abstract fromJson(data: any): void;
         
     }
 

@@ -13,13 +13,13 @@ module trackinexercise.models {
         public longitude: string;
         public position: number;
         public type: KnockoutObservable<number> = ko.observable<number>();
-        
+
         // Data calculation
         public distance: KnockoutObservable<number> = ko.observable<number>(0);
         public duration: KnockoutObservable<number> = ko.observable<number>(0);
         public distanceInMiles: KnockoutComputed<number>;
         public durationInMinutes: KnockoutComputed<number>;
-        
+
         // Extra properties
         public marker;
         public infoWindow;
@@ -48,6 +48,22 @@ module trackinexercise.models {
                 return Math.round(duration / 60);
             }).extend({ throttle: 100 });
 
+            this.type.subscribe((): void => {
+                if (this.marker) {
+                    this.marker.setIcon({
+                        url: this.getIcon(),
+                        scaledSize: new google.maps.Size(35, 35)
+                    });
+                }
+            });
+
+        }
+
+        /**
+         * Return waypoint icon
+         */
+        public getIcon(): string {
+            return this.type() == 1 ? 'resources/assets/images/dropoff-icon.png' : 'resources/assets/images/pickup-icon.png';
         }
 
         // Return waypoint data
@@ -61,7 +77,7 @@ module trackinexercise.models {
                 type: this.type()
             }
         }
-        
+
         // Set waypoint data from json
         public fromJson(json: any): any {
             this.id = json.id;

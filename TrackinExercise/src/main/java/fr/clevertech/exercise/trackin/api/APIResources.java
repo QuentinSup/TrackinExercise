@@ -7,17 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import fr.clevertech.exercise.trackin.controllers.Application;
 import fr.clevertech.exercise.trackin.model.AbstractModel;
-import io.swagger.annotations.Api;
 
 /**
  * API Model resources
@@ -113,7 +108,6 @@ public abstract class APIResources<T extends AbstractModel> {
 
 		// Create model
 		T model = retrieveModelObject(null, jsonValue);
-
 		
 		if (logger.isTraceEnabled()) {
 			logger.trace(String.format("Add new model '%s' data", model.getClass()));
@@ -159,7 +153,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		
 		// Retrieve data from database
 		@SuppressWarnings("unchecked")
-		List<T> models = (List<T>) session.createQuery(String.format("from %s" + (this.orderBy == null?"":" ORDER BY " + this.orderBy), this.classModel.getSimpleName())).list();
+		final List<T> models = (List<T>) session.createQuery(String.format("from %s" + (this.orderBy == null?"":" ORDER BY " + this.orderBy), this.classModel.getSimpleName())).list();
 		session.close();
 		
 		// Convert into json
@@ -169,11 +163,46 @@ public abstract class APIResources<T extends AbstractModel> {
 		// Return all drivers as json with HttpStatus 200
 		return new ResponseEntity<String>(jsonValue, HttpStatus.OK);
 	}
+	
+	/**
+	 * GET Return an instance of a model
+	 * 
+	 * @param id model identifier
+	 * @return
+	 */
+	public ResponseEntity<String> load(final String id) throws InstantiationException, IllegalAccessException {
+
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Return data model from database"));
+		}
+
+		// Get hibernate session factory
+		final Session session = Application.getSession();
+		if (!session.isOpen() || !session.isConnected()) {
+			logger.error("Not connected to the database");
+			// Return HttpStatus 412
+			return new ResponseEntity<String>(HttpStatus.PRECONDITION_FAILED);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Retrieve model object '%s' from database", this.classModel.getSimpleName()));
+		}
+		
+		// Create model
+		T model = retrieveModelObject(id, null);
+	
+		// Convert into json
+		final Gson gson = new GsonBuilder().create();
+		final String jsonValue = gson.toJson(model);
+
+		// Return all drivers as json with HttpStatus 200
+		return new ResponseEntity<String>(jsonValue, HttpStatus.OK);
+	}
 
 	/**
 	 * DELETE Remove a model object from database
 	 * 
-	 * @param json
+	 * @param id model identifier
 	 * @return
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
@@ -218,7 +247,8 @@ public abstract class APIResources<T extends AbstractModel> {
 	/**
 	 * PUT Update a model object to database
 	 * 
-	 * @param json
+	 * @param id model identifier
+	 * @param jsonValue model data
 	 * @return
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 

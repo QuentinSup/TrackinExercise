@@ -13,6 +13,7 @@
 		<!-- List of XML mapping files -->
 		<mapping class="fr.clevertech.exercise.trackin.model.WayPoint"/>
 		<mapping class="fr.clevertech.exercise.trackin.model.Driver"/>
+		<mapping class="fr.clevertech.exercise.trackin.model.Tour"/>
 		
 	</session-factory>
 </hibernate-configuration>

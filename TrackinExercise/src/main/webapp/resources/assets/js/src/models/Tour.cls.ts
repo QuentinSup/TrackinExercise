@@ -1,13 +1,18 @@
-module trackinexercise {
+module trackinexercise.models {
 
     export var MILE: number = 1609.344;
 
     /**
      * Class used to manage waypoints list
      */
-    export class WayPointsManager {
+    export class Tour extends commons.API {
 
-        public wayPointsList = ko.observableArray<models.WayPoint>();
+        private static API: string = "api/tours";
+
+        public driverId: number;
+
+        // Extra
+        public wayPoints = ko.observableArray<models.WayPoint>();
         public globalDuration = ko.observable<number>();
         public globalDistance = ko.observable<number>();
 
@@ -19,10 +24,16 @@ module trackinexercise {
         /**
          * Constructor
          */
-        constructor() {
+        constructor(json?: any) {
+
+            super(Tour.API);
+
+            if (typeof (json) == 'object') {
+                this.fromJson(json);
+            }
 
             this._computed = ko.computed((): void => {
-                let wPoints: models.WayPoint[] = this.wayPointsList();
+                let wPoints: models.WayPoint[] = this.wayPoints();
                 let duration = 0;
                 let distance = 0;
                 for (let i = 0; i < wPoints.length; i++) {
@@ -47,7 +58,22 @@ module trackinexercise {
             }).extend({ throttle: 100 });
         }
 
-        public create(wayPoint: models.WayPoint, fn?: Function): void {
+        // Return route data
+        public data(): any {
+            return {
+                id: this.id,
+                driverId: this.driverId
+            }
+        }
+
+        // Set driver data from json
+        public fromJson(json: any): any {
+            this.id = json.id;
+            this.driverId = json.driverId;
+        }
+
+        // Add waypoint to the route
+        public push(wayPoint: models.WayPoint, fn?: Function): void {
 
             let wayPoints: models.WayPoint[] = this.all();
 
@@ -59,7 +85,7 @@ module trackinexercise {
             // Save to database
             wayPoint.save((wPoint: models.WayPoint): void => {
 
-                this.wayPointsList.push(wPoint);
+                this.wayPoints.push(wPoint);
 
                 if ($.isFunction(fn)) {
                     fn.call(this, wPoint);
@@ -72,32 +98,18 @@ module trackinexercise {
          * Return all the waypoints
          */
         public all(): models.WayPoint[] {
-            return this.wayPointsList();
+            return this.wayPoints();
         }
 
         /**
-         * Search a WayPoint by location (lat, lng) and return object found
+         * Remove a waypoint from list and database
          */
-        public getByLocation(location: any): models.WayPoint {
-            let wayPoints: models.WayPoint[] = this.all();
-            for (let i = 0; i < wayPoints.length; i++) {
-                let wayPoint: models.WayPoint = wayPoints[i];
-                if(wayPoint.marker.position.lat() == location.lat() && wayPoint.marker.position.lng() == location.lng()) {
-                    return wayPoint;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Remove a waypoint from list and databae
-         */
-        public remove(wayPoint: models.WayPoint, fn?: Function): void {
+        public detach(wayPoint: models.WayPoint, fn?: Function): void {
 
             wayPoint.remove((wPoint: models.WayPoint): void => {
 
                 // Remove waypoint from list
-                this.wayPointsList.remove(wPoint);
+                this.wayPoints.remove(wPoint);
 
                 if ($.isFunction(fn)) {
                     fn.call(this, wPoint);
@@ -109,12 +121,12 @@ module trackinexercise {
         /**
          * List waypoints from database
          */
-        public list(fn?: Function): void {
+        public loadWayPoints(fn?: Function): void {
 
-            new models.WayPoint().list((data): void => {
+            this.sublist('waypoints', (data): void => {
 
                 $.each(data, (n, waypointJson): void => {
-                    this.wayPointsList.push(new models.WayPoint(waypointJson));
+                    this.wayPoints.push(new models.WayPoint(waypointJson));
                 });
 
                 if ($.isFunction(fn)) {

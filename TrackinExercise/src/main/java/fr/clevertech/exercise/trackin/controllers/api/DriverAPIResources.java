@@ -27,7 +27,7 @@ public class DriverAPIResources extends APIResources<Driver> {
 	 * Constructor
 	 */
 	public DriverAPIResources() {
-		super(Driver.class, "lastName ASC");
+		super(Driver.class, "firstName ASC");
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class DriverAPIResources extends APIResources<Driver> {
 			// Parse json value
 			JSONObject json = new JSONObject(jsonValue);
 
-			// Create Driver
+			// Populate Driver data
 			driver.setFirstName(json.optString("firstName"));
 			driver.setLastName(json.optString("lastName"));
 			driver.setGender(json.optInt("gender", 0));
