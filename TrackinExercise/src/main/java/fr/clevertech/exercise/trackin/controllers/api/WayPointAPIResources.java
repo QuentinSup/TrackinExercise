@@ -54,6 +54,7 @@ public class WayPointAPIResources extends APIResources<WayPoint> {
 		waypoint.setLatitude(json.optString("latitude", "0"));
 		waypoint.setLongitude(json.optString("longitude", "0"));
 		waypoint.setPosition(json.optInt("position"));
+		waypoint.setTourId(json.optInt("tourId", 1));
 		waypoint.setType(json.optInt("type", 0));
 
 	}

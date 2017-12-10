@@ -12,6 +12,7 @@ module trackinexercise.models {
         public latitude: string;
         public longitude: string;
         public position: number;
+        public tourId: number;
         public type: KnockoutObservable<number> = ko.observable<number>();
 
         // Data calculation
@@ -74,6 +75,7 @@ module trackinexercise.models {
                 latitude: this.latitude,
                 longitude: this.longitude,
                 position: this.position,
+                tourId: this.tourId,
                 type: this.type()
             }
         }
@@ -85,6 +87,7 @@ module trackinexercise.models {
             this.latitude = json.latitude;
             this.longitude = json.longitude;
             this.position = json.position;
+            this.tourId = json.tourId;
             this.type(json.type);
         }
 

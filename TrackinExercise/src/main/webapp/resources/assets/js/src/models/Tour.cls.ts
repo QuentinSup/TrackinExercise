@@ -81,6 +81,8 @@ module trackinexercise.models {
             wayPoint.position = wayPoints.length;
             // Autoset type (first must be pickup)
             wayPoint.type(wayPoints.length == 0 ? 0 : 1);
+			// Autoset tour id
+			wayPoint.tourId = this.id;
 
             // Save to database
             wayPoint.save((wPoint: models.WayPoint): void => {

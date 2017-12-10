@@ -88,7 +88,7 @@ public abstract class APIResources<T extends AbstractModel> {
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
 	 */
-	public ResponseEntity<String> create(String jsonValue) throws InstantiationException, IllegalAccessException {
+	public ResponseEntity<String> create(final String jsonValue) throws InstantiationException, IllegalAccessException {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug(String.format("Create a new object with json data : %s", jsonValue));
@@ -112,13 +112,18 @@ public abstract class APIResources<T extends AbstractModel> {
 		if (logger.isTraceEnabled()) {
 			logger.trace(String.format("Add new model '%s' data", model.getClass()));
 		}
-		
+				
 		// Save data to database
 		try {
 			session.save(model);
 			session.close();
+			
+			// Convert into json
+			final Gson gson = new GsonBuilder().create();
+			final String returnedJsonValue = gson.toJson(model);
+			
 			// Return HttpStatus 200 for Success
-			return new ResponseEntity<String>(HttpStatus.OK);
+			return new ResponseEntity<String>(returnedJsonValue, HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			// Return HttpStatus 500

@@ -193,6 +193,7 @@ var trackinexercise;
                     latitude: this.latitude,
                     longitude: this.longitude,
                     position: this.position,
+                    tourId: this.tourId,
                     type: this.type()
                 };
             };
@@ -203,6 +204,7 @@ var trackinexercise;
                 this.latitude = json.latitude;
                 this.longitude = json.longitude;
                 this.position = json.position;
+                this.tourId = json.tourId;
                 this.type(json.type);
             };
             /**
@@ -343,6 +345,8 @@ var trackinexercise;
                 wayPoint.position = wayPoints.length;
                 // Autoset type (first must be pickup)
                 wayPoint.type(wayPoints.length == 0 ? 0 : 1);
+                // Autoset tour id
+                wayPoint.tourId = this.id;
                 // Save to database
                 wayPoint.save(function (wPoint) {
                     _this.wayPoints.push(wPoint);

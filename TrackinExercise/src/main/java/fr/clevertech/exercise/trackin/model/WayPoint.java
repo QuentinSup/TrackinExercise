@@ -1,5 +1,6 @@
 package fr.clevertech.exercise.trackin.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -40,6 +41,11 @@ public class WayPoint extends AbstractModel {
 	 * Route delivery type (0:pickup, 1:drop)
 	 */
 	private Integer type;
+	/**
+	 * Route id
+	 */
+	@Column(name = "tour_id")
+	private Integer tourId;
 	
 	/**
 	 * Constructor
@@ -148,6 +154,22 @@ public class WayPoint extends AbstractModel {
 	 */
 	public void setType(int type) {
 		this.type = new Integer(type);
+	}
+	
+	/**
+	 * Return tour id
+	 * @return
+	 */
+	public int getTourId() {
+		return tourId;
+	}
+
+	/**
+	 * Set tour id
+	 * @param tourId
+	 */
+	public void setTourId(int tourId) {
+		this.tourId = new Integer(tourId);
 	}
 
 }
