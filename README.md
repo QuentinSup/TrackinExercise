@@ -1,7 +1,10 @@
 # TrackinExercise
 Welcome !
 
-* Back-end : TrackinExercise/src/main/java
+* Java Back-end : TrackinExercise/src/main/java
+* Java configuration : TrackinExercise/src/main/resources
+* Java Test unit : TrackinExercise/src/test/java
+* Maven : TrackinExercise/pom.xml
 * Front-end : TrackinExercise/src/main/webapp
 * MySQL Dump : TrackinExercise/src/mysql
 
