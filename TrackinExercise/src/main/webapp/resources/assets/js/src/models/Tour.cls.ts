@@ -73,7 +73,7 @@ module trackinexercise.models {
         }
 
         // Add waypoint to the route
-        public push(wayPoint: models.WayPoint, fn?: Function): void {
+        public push(wayPoint: models.WayPoint, fnDone?: Function, fnFail?: Function): void {
 
             let wayPoints: models.WayPoint[] = this.all();
 
@@ -89,10 +89,10 @@ module trackinexercise.models {
 
                 this.wayPoints.push(wPoint);
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, wPoint);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, wPoint);
                 }
-            });
+            }, fnFail);
 
         }
 
@@ -106,17 +106,17 @@ module trackinexercise.models {
         /**
          * Remove a waypoint from list and database
          */
-        public detach(wayPoint: models.WayPoint, fn?: Function): void {
+        public detach(wayPoint: models.WayPoint, fnDone?: Function, fnFail?: Function): void {
 
             wayPoint.remove((wPoint: models.WayPoint): void => {
 
                 // Remove waypoint from list
                 this.wayPoints.remove(wPoint);
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, wPoint);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, wPoint);
                 }
-            });
+            }, fnFail);
 
         }
 

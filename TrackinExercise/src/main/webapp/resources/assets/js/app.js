@@ -28,84 +28,108 @@ var trackinexercise;
             /**
              * Execute a POST request
              */
-            API.prototype.create = function (fn) {
+            API.prototype.create = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'POST',
                     url: this.uri,
                     data: this.toJson(),
                     contentType: "application/json"
-                }).done(function (resourceData) {
+                }).done(function (resourceData, textStatus, jqXHR) {
                     // Update id
                     _this.id = resourceData.id;
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a PUT request
              */
-            API.prototype.update = function (fn) {
+            API.prototype.update = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'PUT',
                     url: this.uri + "/" + this.id,
                     data: this.toJson(),
                     contentType: "application/json"
-                }).done(function (resourceData) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                }).done(function (resourceData, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a DELETE request
              */
-            API.prototype.remove = function (fn) {
+            API.prototype.remove = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'DELETE',
                     url: this.uri + "/" + this.id,
                     contentType: "application/json"
-                }).done(function () {
+                }).done(function (resourceData, textStatus, jqXHR) {
                     _this.id = null;
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request
              */
-            API.prototype.load = function (id, fn) {
+            API.prototype.load = function (id, fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri + '/' + id).done(function (data) {
+                $.getJSON(this.uri + '/' + id).done(function (data, textStatus, jqXHR) {
                     _this.fromJson(data);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request
              */
-            API.prototype.list = function (fn) {
+            API.prototype.list = function (fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri).done(function (data) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                $.getJSON(this.uri).done(function (data, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request for a sub operation resource
              */
-            API.prototype.sublist = function (operation, fn) {
+            API.prototype.sublist = function (operation, fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri + '/' + this.id + '/' + operation).done(function (data) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                $.getJSON(this.uri + '/' + this.id + '/' + operation).done(function (data, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
@@ -115,18 +139,18 @@ var trackinexercise;
              * id => update
              * id = -1 => remove
              */
-            API.prototype.save = function (fn) {
+            API.prototype.save = function (fnDone, fnFail) {
                 if (!this.id) {
                     // Create
-                    this.create(fn);
+                    this.create(fnDone, fnFail);
                 }
                 else if (this.id == -1) {
                     // Delete
-                    this.remove(fn);
+                    this.remove(fnDone, fnFail);
                 }
                 else {
                     // Update
-                    this.update(fn);
+                    this.update(fnDone, fnFail);
                 }
             };
             // Return waypoint data as Json
@@ -342,7 +366,7 @@ var trackinexercise;
                 this.driverId = json.driverId;
             };
             // Add waypoint to the route
-            Tour.prototype.push = function (wayPoint, fn) {
+            Tour.prototype.push = function (wayPoint, fnDone, fnFail) {
                 var _this = this;
                 var wayPoints = this.all();
                 // Autoset position
@@ -354,10 +378,10 @@ var trackinexercise;
                 // Save to database
                 wayPoint.save(function (wPoint) {
                     _this.wayPoints.push(wPoint);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, wPoint);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, wPoint);
                     }
-                });
+                }, fnFail);
             };
             /**
              * Return all the waypoints
@@ -368,15 +392,15 @@ var trackinexercise;
             /**
              * Remove a waypoint from list and database
              */
-            Tour.prototype.detach = function (wayPoint, fn) {
+            Tour.prototype.detach = function (wayPoint, fnDone, fnFail) {
                 var _this = this;
                 wayPoint.remove(function (wPoint) {
                     // Remove waypoint from list
                     _this.wayPoints.remove(wPoint);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, wPoint);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, wPoint);
                     }
-                });
+                }, fnFail);
             };
             /**
              * List waypoints from database
@@ -658,9 +682,14 @@ var trackinexercise;
          * Update current tour driver
          */
         App.prototype.updateTourDriver = function (driver) {
+            var _this = this;
             this.selectedDriver(driver);
             this.currentTour().driverId = driver.id;
-            this.currentTour().save();
+            this.currentTour().save(function (data) {
+                _this.toast("The driver " + driver.fullName() + " has been correctly assigned to the tour");
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
+            });
         };
         /**
          * Initialization
@@ -710,10 +739,14 @@ var trackinexercise;
         App.prototype.addWayPoint = function (wayPoint) {
             var _this = this;
             this.currentTour().push(wayPoint, function () {
+                // Show success
+                _this.toast("New waypoint has been correctly assigned to the tour");
                 // Add marker
                 _this.gMap.addWayPointMarker(wayPoint);
                 // Draw roads
                 _this.drawWayPointsRoads();
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
             });
         };
         /**
@@ -722,10 +755,14 @@ var trackinexercise;
         App.prototype.removeWayPoint = function (wayPoint) {
             var _this = this;
             this.currentTour().detach(wayPoint, function () {
+                // Show success
+                _this.toast("Waypoint has been correctly removed from the tour");
                 wayPoint.marker.setMap(null);
                 wayPoint.marker = null;
                 // Redraw roads (could be optimized)
                 _this.drawWayPointsRoads();
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
             });
         };
         /**

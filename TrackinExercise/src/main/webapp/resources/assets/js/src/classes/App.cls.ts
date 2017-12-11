@@ -64,7 +64,11 @@ module trackinexercise {
 
             this.selectedDriver(driver);
             this.currentTour().driverId = driver.id;
-            this.currentTour().save();
+            this.currentTour().save((data): void => {
+                this.toast("The driver " + driver.fullName() + " has been correctly assigned to the tour");    
+            }, (): void => {
+                this.toast("Oups ! Something wrong happened. Please refresh page.");    
+            });
 
         }
 
@@ -125,11 +129,16 @@ module trackinexercise {
         public addWayPoint(wayPoint: models.WayPoint): void {
             this.currentTour().push(wayPoint, (): void => {
 
+                // Show success
+                this.toast("New waypoint has been correctly assigned to the tour");
+                
                 // Add marker
                 this.gMap.addWayPointMarker(wayPoint);
 
                 // Draw roads
                 this.drawWayPointsRoads();
+            }, (): void => {
+                this.toast("Oups ! Something wrong happened. Please refresh page.");    
             });
         }
 
@@ -139,11 +148,16 @@ module trackinexercise {
         public removeWayPoint(wayPoint: models.WayPoint): void {
             this.currentTour().detach(wayPoint, (): void => {
 
+                // Show success
+                this.toast("Waypoint has been correctly removed from the tour");
+                
                 wayPoint.marker.setMap(null);
                 wayPoint.marker = null;
 
                 // Redraw roads (could be optimized)
                 this.drawWayPointsRoads();
+            }, (): void => {
+                this.toast("Oups ! Something wrong happened. Please refresh page.");    
             });
         }
 
