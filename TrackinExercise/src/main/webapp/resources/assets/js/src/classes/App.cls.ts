@@ -108,8 +108,14 @@ module trackinexercise {
                 $('#tour').addClass('animated slideInRight');
             }, 2000);
             
-            $(".nano").nanoScroller();
-            $("[title]").tooltipster();
+            setTimeout((): void => {
+                try {
+                    $("[title]").tooltipster();
+                    $(".nano").nanoScroller();
+                } catch(e) { 
+                    //silent 
+                }
+            }, 100);
             
         }
 
@@ -220,6 +226,8 @@ module trackinexercise {
             let bounds = new google.maps.LatLngBounds();
             let wayPoints: models.WayPoint[] = this.currentTour().all();
 
+            bounds.extend(this.shopAddress().marker.position);
+            
             for (let i = 0; i < wayPoints.length; i++) {
                 let wayPoint: models.WayPoint = wayPoints[i];
                 bounds.extend(wayPoint.marker.position);

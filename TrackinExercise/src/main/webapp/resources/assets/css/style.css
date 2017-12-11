@@ -267,6 +267,9 @@ body {
   opacity: 1;
   transition: opacity 1s;
 }
+#tour-search-box {
+  margin: .5em;
+}
 #tour-search-box > input {
   font-size: .9em;
 }
@@ -308,7 +311,7 @@ body {
   right: 0px;
   top: 0px;
   bottom: 0px;
-  width: 300px;
+  width: 350px;
   z-index: 1;
   color: #fff;
 }
@@ -413,7 +416,7 @@ h4 {
   left: 0;
   right: 0;
   top: 90px;
-  bottom: 160px;
+  bottom: 140px;
   height: auto;
 }
 #waypoints .waypoints_line {
@@ -427,7 +430,6 @@ h4 {
   padding: 0;
   margin: 0;
   margin-left: 20px;
-  margin-top: 15px;
 }
 #waypoints ul > li {
   list-style: none;
@@ -486,7 +488,7 @@ h4 {
 #waypoint_total {
   position: absolute;
   display: block;
-  bottom: 10px;
+  bottom: 0px;
   left: 0px;
   right: 0px;
   z-index: 9;
@@ -553,6 +555,7 @@ h4 {
   border: 0px;
   color: #fff;
   position: relative;
+  cursor: pointer;
 }
 .pac-container .pac-item.pac-item-selected {
   background: transparent;

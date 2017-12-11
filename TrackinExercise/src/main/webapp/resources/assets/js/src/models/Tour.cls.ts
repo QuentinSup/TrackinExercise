@@ -80,7 +80,7 @@ module trackinexercise.models {
             // Autoset position
             wayPoint.position = wayPoints.length;
             // Autoset type to drop-off
-            wayPoint.type(2);
+            wayPoint.type(1);
 			// Autoset tour id
 			wayPoint.tourId = this.id;
 

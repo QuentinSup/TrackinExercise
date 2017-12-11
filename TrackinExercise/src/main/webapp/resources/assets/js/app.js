@@ -348,7 +348,7 @@ var trackinexercise;
                 // Autoset position
                 wayPoint.position = wayPoints.length;
                 // Autoset type to drop-off
-                wayPoint.type(2);
+                wayPoint.type(1);
                 // Autoset tour id
                 wayPoint.tourId = this.id;
                 // Save to database
@@ -508,7 +508,7 @@ var trackinexercise;
         GMap.prototype.drawRoute = function (wayPoints, optimize, fn) {
             var _this = this;
             if (optimize === void 0) { optimize = false; }
-            if (!wayPoints || wayPoints.length < 2) {
+            if (!wayPoints || wayPoints.length == 0) {
                 return;
             }
             app.calculatingRoute(true);
@@ -694,8 +694,15 @@ var trackinexercise;
             setTimeout(function () {
                 $('#tour').addClass('animated slideInRight');
             }, 2000);
-            $(".nano").nanoScroller();
-            $("[title]").tooltipster();
+            setTimeout(function () {
+                try {
+                    $("[title]").tooltipster();
+                    $(".nano").nanoScroller();
+                }
+                catch (e) {
+                    //silent 
+                }
+            }, 100);
         };
         /**
          * Add new waypoint to tour
@@ -783,6 +790,7 @@ var trackinexercise;
             // For each place, get the icon, name and location.
             var bounds = new google.maps.LatLngBounds();
             var wayPoints = this.currentTour().all();
+            bounds.extend(this.shopAddress().marker.position);
             for (var i = 0; i < wayPoints.length; i++) {
                 var wayPoint = wayPoints[i];
                 bounds.extend(wayPoint.marker.position);

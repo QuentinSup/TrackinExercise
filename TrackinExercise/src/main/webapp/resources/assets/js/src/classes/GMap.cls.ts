@@ -135,7 +135,7 @@ module trackinexercise {
          */
         public drawRoute(wayPoints: models.WayPoint[], optimize: boolean = false, fn?: Function): void {
 
-            if (!wayPoints || wayPoints.length < 2) {
+            if (!wayPoints || wayPoints.length == 0) {
                 return;
             }
 
