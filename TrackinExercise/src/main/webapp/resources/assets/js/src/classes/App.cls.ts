@@ -27,6 +27,12 @@ module trackinexercise {
         // Message trigger
         public calculatingRoute: KnockoutObservable<boolean> = ko.observable<boolean>(false);
 
+        // Waiting
+        public waitingFor: KnockoutObservable<boolean> = ko.observable<boolean>(false);
+
+        // Shop address (should come from database by that's ok for the demo)
+        public shopAddress: KnockoutObservable<models.WayPoint> = ko.observable<models.WayPoint>();
+
         // Current driver selection
         public selectedDriver: KnockoutObservable<models.Driver> = ko.observable<models.Driver>();
 
@@ -66,12 +72,22 @@ module trackinexercise {
          * Initialization
          */
         public init(): void {
-            this.gMap.initGMap();
-            this.retrieveDriverList((): void => {
-                this.retrieveCurrentRoute();
+            this.gMap.initGMap((): void => {
+
+                this.retrieveDriverList((): void => {
+                    this.retrieveCurrentRoute((): void => {
+
+                        // Prepare google search box
+                        this.gMap.createSearchBox(document.getElementById('main-search-input'));
+                        this.gMap.createSearchBox(document.getElementById('tour-search-input'));
+
+                        // Show HMI with animation
+                        this.initUXAnimationSequence();
+
+                    });
+                });
+
             });
-            // Show HMI with animation
-            this.initUXAnimationSequence();
         }
 
         /**
@@ -80,7 +96,7 @@ module trackinexercise {
         private initUXAnimationSequence(): void {
 
             setTimeout((): void => {
-                $('#search-box').addClass('animated slideInDown');
+                $('#main-search-box').addClass('animated slideInDown');
             }, 1000);
 
             setTimeout((): void => {
@@ -91,6 +107,10 @@ module trackinexercise {
             setTimeout((): void => {
                 $('#tour').addClass('animated slideInRight');
             }, 2000);
+            
+            $(".nano").nanoScroller();
+            $("[title]").tooltipster();
+            
         }
 
         /**
@@ -124,10 +144,10 @@ module trackinexercise {
         /**
          * Retrieve waypoints from tour
          */
-        public retrieveCurrentRoute(): void {
+        public retrieveCurrentRoute(fn: Function): void {
 
             new models.Tour().list((data: any): void => {
-                
+
                 // Note : for the demo, only one route
                 let tour: models.Tour = new models.Tour(data[0]);
 
@@ -150,6 +170,8 @@ module trackinexercise {
                     });
 
                 });
+
+                fn.call(this);
             });
         }
 
@@ -175,16 +197,16 @@ module trackinexercise {
             });
 
         }
-        
+
         /**
          * Search a driver by is id
          */
         public getDriverById(id: number): models.Driver {
             let drivers: models.Driver[] = this.drivers();
-            for(let i = 0; i < drivers.length; i++) {
+            for (let i = 0; i < drivers.length; i++) {
                 let driver: models.Driver = drivers[i];
-                if(driver.id == id) {
-                    return driver;    
+                if (driver.id == id) {
+                    return driver;
                 }
             }
             return null;
@@ -219,13 +241,8 @@ module trackinexercise {
                 return;
             }
 
-            // First waypoint
-            wayPointsData[0].duration(0);
-            wayPointsData[0].distance(0);
-
             this.gMap.drawRoute(wayPointsData, optimize, (directions: any, wayPointsMapped: models.WayPoint[]): void => {
                 let wayPointsList: models.WayPoint[] = [];
-                wayPointsList.push(wayPointsData[0]);
                 for (let i = 0; i < directions.routes[0].legs.length; i++) {
 
                     let duration: number = directions.routes[0].legs[i].duration.value;
@@ -266,7 +283,7 @@ module trackinexercise {
                         // Toast a message
                         if (optimize) {
                             if (minutesDiff > 0) {
-                                this.toast("Well done ! Tour has been optimized (" + minutesDiff + " minutes saved) !");
+                                this.toast("Well done ! Tour has been optimized (<span class=\"green\">" + minutesDiff + " minutes</span> saved) !");
                             } else {
                                 this.toast("All right ! Tour is already optimized");
                             }
@@ -274,16 +291,16 @@ module trackinexercise {
                             if (minutesDiff != 0) {
                                 if (minutesDiff > 0) {
                                     // Tour is shorter
-                                    this.toast("Tour has been updated (" + -minutesDiff + "minutes)");
+                                    this.toast("Tour has been updated (<span class=\"green\">" + -minutesDiff + "</span> minutes)");
                                 } else {
                                     // Tour is longer
-                                    this.toast("Tour has been updated (+" + -minutesDiff + " minutes)");
+                                    this.toast("Tour has been updated (+" + -minutesDiff + "  minutes)");
                                 }
                             }
                         }
                     }, 500); // use timeout because of throttle delay of durationInMinutes() calculation
                 }
-                
+
             });
 
         }
@@ -339,6 +356,36 @@ module trackinexercise {
                 this.messageIndex = 0;
             }
             this.toast(message, 'Need help ?');
+        }
+
+        /**
+         * Resolve current user location
+         */
+        public resolveLocation(fn: Function): void {
+
+            // San Francisco
+            let defaultLocation = { lat: 37.774929, lng: -122.419416 };
+
+            if (navigator.geolocation) {
+
+                let options: any = {
+                    enableHighAccuracy: true,
+                    timeout: 3000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition((pos: any): void => {
+                    let location = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    }
+                    fn.call(this, location);
+                }, (): void => {
+                    fn.call(this, defaultLocation);
+                }, options);
+            } else {
+                fn.call(this, defaultLocation);
+            }
         }
 
     }

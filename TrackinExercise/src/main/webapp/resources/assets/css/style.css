@@ -180,6 +180,9 @@ td,
 th {
   padding: 0;
 }
+img {
+  vertical-align: middle;
+}
 .hiding {
   opacity: 0;
 }
@@ -205,11 +208,27 @@ th {
   border: 3px solid #404040;
   border-radius: 50px;
 }
+.green {
+  color: #53b987;
+}
+.loading_text {
+  padding: 1em;
+  font-size: .9em;
+}
 a.clickable {
-  color: #e6c6c6;
+  background: transparent;
+  padding: .3em;
+  color: #fff;
+  display: block;
+  border: 1px solid #fff;
+  text-align: center;
+  font-size: .9em;
+  border-radius: 3px;
+  margin: .2em 0em;
 }
 a.clickable:hover {
-  color: #fff;
+  color: #dedede;
+  border-color: #404040;
 }
 .text-smaller {
   font-size: .9em;
@@ -232,7 +251,7 @@ body {
   position: absolute;
   z-index: 999;
 }
-a#search-box {
+#main-search-box {
   position: absolute;
   z-index: 999;
   font-size: 1em;
@@ -244,7 +263,18 @@ a#search-box {
   opacity: .2;
   transition: opacity 3s;
 }
-a#search-box > input {
+#main-search-box:hover {
+  opacity: 1;
+  transition: opacity 1s;
+}
+#tour-search-box > input {
+  font-size: .9em;
+}
+.search-box {
+  height: 30px;
+  position: relative;
+}
+.search-box > input {
   position: absolute;
   bottom: 5px;
   top: 5px;
@@ -254,10 +284,10 @@ a#search-box > input {
   color: #fff;
   padding: 0em .5em;
 }
-a#search-box > input:focus {
+.search-box > input:focus {
   outline: inherit;
 }
-a#search-box::after {
+.search-box::after {
   content: '';
   display: block;
   position: absolute;
@@ -269,10 +299,6 @@ a#search-box::after {
   opacity: 0.8;
   background-color: #252830;
   border-radius: 3px;
-}
-a#search-box:hover {
-  opacity: 1;
-  transition: opacity 1s;
 }
 #menu {
   position: absolute;
@@ -299,8 +325,17 @@ a#search-box:hover {
   background-color: #101010;
   border: 3px solid #000000;
 }
-#drivers {
+#shop {
   padding: .5em;
+}
+#drivers {
+  padding-left: 2em;
+  font-size: .9em;
+}
+#drivers > .driver_title {
+  color: #888686;
+  font-weight: normal;
+  font-size: .9em;
 }
 #drivers .select_box {
   position: relative;
@@ -312,7 +347,7 @@ a#search-box:hover {
   vertical-align: middle;
 }
 #drivers .select_box > .select_box_value {
-  padding: .5em 1em;
+  padding: .3em .5em;
   border: 1px solid #404040;
   border-radius: 3px;
   cursor: pointer;
@@ -327,7 +362,7 @@ a#search-box:hover {
   bottom: 0;
   right: 0;
   margin-left: 0px;
-  margin-top: 40px;
+  margin-top: 35px;
 }
 #drivers .select_box > .select_box_list :after {
   content: '';
@@ -377,8 +412,8 @@ h4 {
   position: absolute;
   left: 0;
   right: 0;
-  top: 50px;
-  bottom: 100px;
+  top: 90px;
+  bottom: 160px;
   height: auto;
 }
 #waypoints .waypoints_line {
@@ -433,9 +468,11 @@ h4 {
   background-size: 100%;
   transition: opacity 1s;
 }
+#waypoints .waypoint_detail {
+  background: #10767b;
+}
 .waypoint_detail {
   font-size: .9em;
-  background: #10767b;
   padding-left: .5em;
   margin: 0em 1em;
   border-radius: 5px;
@@ -453,7 +490,8 @@ h4 {
   left: 0px;
   right: 0px;
   z-index: 9;
-  padding: .5em .5em;
+  padding: .5em 1em;
+  margin: 0;
 }
 .progress_area {
   opacity: 0;

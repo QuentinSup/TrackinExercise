@@ -12,14 +12,11 @@ module trackinexercise {
         /**
          * Initialize map and center San Francisco city ;)
          */
-        private initMap(): void {
-
-            // San Francisco
-            let sf: any = { lat: 37.774929, lng: -122.419416 };
+        private initMap(startPosition: any): void {
 
             let map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 10,
-                center: sf
+                center: startPosition
             });
 
             this.map = map;
@@ -146,7 +143,7 @@ module trackinexercise {
 
             // Copy waypoints array
             let wayPointsRoute: models.WayPoint[] = [].concat(wayPoints);
-            let fromWayPoint: models.WayPoint = wayPointsRoute.shift();
+            let fromWayPoint: models.WayPoint = app.shopAddress();
             let toWayPoint: models.WayPoint = wayPointsRoute.pop();
 
             let wayPointsMapped: any = wayPointsRoute.map(function(wayPoint: models.WayPoint) {
@@ -181,30 +178,50 @@ module trackinexercise {
 
             });
         }
-        
+
         /**
          * Callback from google load
          */
-        public initGMap(): void {
+        public initGMap(fn: Function): void {
 
             this.directionsService = new google.maps.DirectionsService();
 
-            let map: any = this.initMap();
+            app.resolveLocation((position: any): void => {
 
+                let wayPoint: models.WayPoint = new models.WayPoint("My shop");
+                wayPoint.setCoordinates(position.lat, position.lng);
+                wayPoint.type(0);
+                app.shopAddress(wayPoint);
+
+                // Init map and center to location
+                let map: any = this.initMap(position);
+                
+                // Add shop waypoint
+                this.addWayPointMarker(wayPoint);
+                
+                fn.call(this);
+     
+            });
+
+
+        }
+
+        /**
+         * Create a search box
+         */
+        public createSearchBox(input: any): void {
+            
             // Create the search box and link it to the UI element.
-            let input = document.getElementById('search-input');
             let searchBox = new google.maps.places.SearchBox(input);
 
-            let markers = [];
-
             // Bias the SearchBox results towards current map's viewport.
-            map.addListener('bounds_changed', function() {
-                searchBox.setBounds(map.getBounds());
+            this.map.addListener('bounds_changed', (): void => {
+                searchBox.setBounds(this.map.getBounds());
             });
 
             // Listen for the event fired when the user selects a prediction and retrieve
             // more details for that place.
-            searchBox.addListener('places_changed', function() {
+            searchBox.addListener('places_changed', (): void => {
 
                 let places = searchBox.getPlaces();
 
@@ -212,16 +229,10 @@ module trackinexercise {
                     return;
                 }
 
-                // Clear out the old markers.
-                markers.forEach(function(marker) {
-                    marker.setMap(null);
-                });
-
-                markers = [];
-
                 // For each place, get the icon, name and location.
                 let bounds = new google.maps.LatLngBounds();
-                places.forEach(function(place) {
+                places.forEach((place): void => {
+                    
                     if (!place.geometry) {
                         console.log("Returned place contains no geometry");
                         return;
@@ -238,13 +249,7 @@ module trackinexercise {
                     wayPoint.setCoordinates(place.geometry.location.lat(), place.geometry.location.lng());
                     app.addWayPoint(wayPoint);
 
-                    // Create a marker for each place.
-                    markers.push(new google.maps.Marker({
-                        map: map,
-                        icon: icon,
-                        title: place.name,
-                        position: place.geometry.location
-                    }));
+                    input.value = '';
 
                     if (place.geometry.viewport) {
                         // Only geocodes have viewport.
@@ -253,7 +258,7 @@ module trackinexercise {
                         bounds.extend(place.geometry.location);
                     }
                 });
-                map.fitBounds(bounds);
+                this.map.fitBounds(bounds);
             });
         }
 

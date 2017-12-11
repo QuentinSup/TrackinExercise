@@ -23,7 +23,11 @@
 
 </head>
 <body>
-
+	
+	<div class="loading_text">
+		Chargement en cours...
+	</div>
+	
 	<div id="progress_route" class="progress_area">
 		<span>Calculating route...</span>
 	</div>
@@ -32,34 +36,43 @@
 		<div id="trackin_message_area"></div>
 	</div>
 
-	<a id="search-box" class="hidden">
-		<input id="search-input" type="text" placeholder="Address" />
+	<a id="main-search-box" class="search-box hidden">
+		<input id="main-search-input" class="search-input" type="text" placeholder="Seize an address to append it to the tour..." />
 	</a>
 
 	<div id="map"></div>
 
 	<div id="tour" class="hidden">
 		<!-- ko if: currentTour() -->
-		<div id="drivers">
-			<div class="select_box">
-				<div class="select_box_value">
-					<!-- ko ifnot: app.selectedDriver() -->
-					<span>Choose a driver...</span>
-					<!-- /ko -->
-					<!-- ko if: app.selectedDriver() -->
-					<img data-bind="attr: { 'src': 'resources/assets/images/gender_' + app.selectedDriver().gender + '.png' }" alt="gender" />
-					<span data-bind="text: app.selectedDriver().fullName()"></span>
-					<!-- /ko -->
-				</div>
-				<div class="select_box_list nano">
-					<ul>
-					<!-- ko foreach: drivers() -->
-						<li data-bind="click: function() { app.updateTourDriver($data); }">
-							<img data-bind="attr: { 'src': 'resources/assets/images/gender_' + gender + '.png' }" alt="gender" />
-							<span data-bind="text: firstName"></span>&nbsp;<span data-bind="text: lastName"></span>
-						</li>
-					<!-- /ko -->
-					</ul>
+		<div id="shop">
+			<!-- ko with: shopAddress() -->
+			<a data-bind="event: { 'dblclick': function() { $root.gMap.centerizeWayPoint($data) } }">
+				<img width="25px" alt="shop" data-bind="attr: { 'src': getIcon() }" />
+				<span class="waypoint_label" data-bind="text: label"></span>
+			</a>
+			<!-- /ko -->
+			<div id="drivers">
+				<div class="driver_title">Driver</div>
+				<div class="select_box">
+					<div class="select_box_value">
+						<!-- ko ifnot: app.selectedDriver() -->
+						<span>Choose a driver...</span>
+						<!-- /ko -->
+						<!-- ko if: app.selectedDriver() -->
+						<img data-bind="attr: { 'src': 'resources/assets/images/gender_' + app.selectedDriver().gender + '.png' }" alt="gender" />
+						<span data-bind="text: app.selectedDriver().fullName()"></span>
+						<!-- /ko -->
+					</div>
+					<div class="select_box_list nano">
+						<ul>
+						<!-- ko foreach: drivers() -->
+							<li data-bind="click: function() { app.updateTourDriver($data); }">
+								<img data-bind="attr: { 'src': 'resources/assets/images/gender_' + gender + '.png' }" alt="gender" />
+								<span data-bind="text: firstName"></span>&nbsp;<span data-bind="text: lastName"></span>
+							</li>
+						<!-- /ko -->
+						</ul>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -69,35 +82,37 @@
 				<ul class="sortable">
 					<!-- ko foreach: currentTour().wayPoints -->
 					<li>
-						<a data-bind="click: function() { $root.gMap.centerizeWayPoint($data) }">
-							<!-- ko if: type() == 0 -->
-							<img src="resources/assets/images/pickup-icon.png" width="25px" alt="pickup" data-bind="event: { dblclick: function() { setType(1) } }" />
-							<!-- /ko -->
-							<!-- ko if: type() == 1 -->
-							<img src="resources/assets/images/dropoff-icon.png" width="25px" alt="dropoff" data-bind="event: { dblclick: function() { setType(0) } }" />
-							<!-- /ko -->
+						<a data-bind="event: { 'dblclick': function() { $root.gMap.centerizeWayPoint($data) } }">
+							<img width="25px" alt="pickup" data-bind="attr: { 'src': getIcon() } , event: { dblclick: function() { setType(type() == 1?2:1) } }" />
 							<span class="waypoint_label" data-bind="text: label"></span>
 							<span data-bind="click: function() { $root.removeWayPoint($data) }" class="close"></span>
 						</a>
 						<!-- ko if: duration() > 0 -->
 						<div class="waypoint_detail">
-							<img src="resources/assets/images/distance-128.png" /><span data-bind="text: distanceInMiles()"></span> miles<br />
-							<img src="resources/assets/images/duration.png" /><span data-bind="text: durationInMinutes()"></span> minutes
+							<img src="resources/assets/images/distance-128.png" />+<span data-bind="text: distanceInMiles()"></span> miles<br />
+							<img src="resources/assets/images/duration.png" />+<span data-bind="text: durationInMinutes()"></span> minutes
 						</div>
 						<!-- /ko -->
 					</li>
 					<!-- /ko -->
+					<li>
+						<div id="tour-search-box" class="search-box">
+							<input id="tour-search-input" class="search-input" type="text" placeholder="Add a waypoint..." />
+						</div>
+					</li>
 				</ul>
 			</div>
 		</div>
 		<div id="waypoint_total" class="waypoint_detail">
 			<h4>Resume</h4>
 			<div>
-				<img src="resources/assets/images/distance-128.png" /><span data-bind="text: currentTour().distanceInMiles()"></span> miles<a class="clickable" title="Center map to see the entire route" data-bind="click: function() { $root.centerBounds() }">Show route</a>
+				<img src="resources/assets/images/distance-128.png" /><span data-bind="text: currentTour().distanceInMiles()"></span> miles
 			</div>
 			<div>
-				<img src="resources/assets/images/duration.png" /><span data-bind="text: currentTour().durationInMinutes()"></span> minutes <a class="clickable" title="Try to optimize the route" data-bind="click: function() { app.drawWayPointsRoads(true); }">Optimize</a>
+				<img src="resources/assets/images/duration.png" /><span data-bind="text: currentTour().durationInMinutes()"></span> minutes
 			</div> 
+			<a class="clickable" title="Try to optimize the route" data-bind="click: function() { app.drawWayPointsRoads(true); }">Optimize the tour</a>
+			<a class="clickable" title="Center map to see the entire route" data-bind="click: function() { $root.centerBounds() }">Center tour on map</a>
 		</div>
 		<!-- /ko -->
 	</div>

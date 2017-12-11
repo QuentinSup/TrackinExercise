@@ -64,7 +64,11 @@ module trackinexercise.models {
          * Return waypoint icon
          */
         public getIcon(): string {
-            return this.type() == 1 ? 'resources/assets/images/dropoff-icon.png' : 'resources/assets/images/pickup-icon.png';
+            switch(this.type()) {
+                case 0: return 'resources/assets/images/market.png';
+                case 1: return 'resources/assets/images/dropoff-icon.png';
+                case 2: return 'resources/assets/images/pickup-icon.png';
+            }
         }
 
         // Return waypoint data

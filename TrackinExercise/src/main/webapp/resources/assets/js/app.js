@@ -183,7 +183,11 @@ var trackinexercise;
              * Return waypoint icon
              */
             WayPoint.prototype.getIcon = function () {
-                return this.type() == 1 ? 'resources/assets/images/dropoff-icon.png' : 'resources/assets/images/pickup-icon.png';
+                switch (this.type()) {
+                    case 0: return 'resources/assets/images/market.png';
+                    case 1: return 'resources/assets/images/dropoff-icon.png';
+                    case 2: return 'resources/assets/images/pickup-icon.png';
+                }
             };
             // Return waypoint data
             WayPoint.prototype.data = function () {
@@ -404,12 +408,10 @@ var trackinexercise;
         /**
          * Initialize map and center San Francisco city ;)
          */
-        GMap.prototype.initMap = function () {
-            // San Francisco
-            var sf = { lat: 37.774929, lng: -122.419416 };
+        GMap.prototype.initMap = function (startPosition) {
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 10,
-                center: sf
+                center: startPosition
             });
             this.map = map;
             return map;
@@ -512,7 +514,7 @@ var trackinexercise;
             app.calculatingRoute(true);
             // Copy waypoints array
             var wayPointsRoute = [].concat(wayPoints);
-            var fromWayPoint = wayPointsRoute.shift();
+            var fromWayPoint = app.shopAddress();
             var toWayPoint = wayPointsRoute.pop();
             var wayPointsMapped = wayPointsRoute.map(function (wayPoint) {
                 return {
@@ -543,16 +545,31 @@ var trackinexercise;
         /**
          * Callback from google load
          */
-        GMap.prototype.initGMap = function () {
+        GMap.prototype.initGMap = function (fn) {
+            var _this = this;
             this.directionsService = new google.maps.DirectionsService();
-            var map = this.initMap();
+            app.resolveLocation(function (position) {
+                var wayPoint = new trackinexercise.models.WayPoint("My shop");
+                wayPoint.setCoordinates(position.lat, position.lng);
+                wayPoint.type(0);
+                app.shopAddress(wayPoint);
+                // Init map and center to location
+                var map = _this.initMap(position);
+                // Add shop waypoint
+                _this.addWayPointMarker(wayPoint);
+                fn.call(_this);
+            });
+        };
+        /**
+         * Create a search box
+         */
+        GMap.prototype.createSearchBox = function (input) {
+            var _this = this;
             // Create the search box and link it to the UI element.
-            var input = document.getElementById('search-input');
             var searchBox = new google.maps.places.SearchBox(input);
-            var markers = [];
             // Bias the SearchBox results towards current map's viewport.
-            map.addListener('bounds_changed', function () {
-                searchBox.setBounds(map.getBounds());
+            this.map.addListener('bounds_changed', function () {
+                searchBox.setBounds(_this.map.getBounds());
             });
             // Listen for the event fired when the user selects a prediction and retrieve
             // more details for that place.
@@ -561,11 +578,6 @@ var trackinexercise;
                 if (places.length == 0) {
                     return;
                 }
-                // Clear out the old markers.
-                markers.forEach(function (marker) {
-                    marker.setMap(null);
-                });
-                markers = [];
                 // For each place, get the icon, name and location.
                 var bounds = new google.maps.LatLngBounds();
                 places.forEach(function (place) {
@@ -583,13 +595,7 @@ var trackinexercise;
                     var wayPoint = new trackinexercise.models.WayPoint(place.name);
                     wayPoint.setCoordinates(place.geometry.location.lat(), place.geometry.location.lng());
                     app.addWayPoint(wayPoint);
-                    // Create a marker for each place.
-                    markers.push(new google.maps.Marker({
-                        map: map,
-                        icon: icon,
-                        title: place.name,
-                        position: place.geometry.location
-                    }));
+                    input.value = '';
                     if (place.geometry.viewport) {
                         // Only geocodes have viewport.
                         bounds.union(place.geometry.viewport);
@@ -598,7 +604,7 @@ var trackinexercise;
                         bounds.extend(place.geometry.location);
                     }
                 });
-                map.fitBounds(bounds);
+                _this.map.fitBounds(bounds);
             });
         };
         return GMap;
@@ -628,6 +634,10 @@ var trackinexercise;
             this.drivers = ko.observableArray();
             // Message trigger
             this.calculatingRoute = ko.observable(false);
+            // Waiting
+            this.waitingFor = ko.observable(false);
+            // Shop address (should come from database by that's ok for the demo)
+            this.shopAddress = ko.observable();
             // Current driver selection
             this.selectedDriver = ko.observable();
             /**
@@ -657,12 +667,17 @@ var trackinexercise;
          */
         App.prototype.init = function () {
             var _this = this;
-            this.gMap.initGMap();
-            this.retrieveDriverList(function () {
-                _this.retrieveCurrentRoute();
+            this.gMap.initGMap(function () {
+                _this.retrieveDriverList(function () {
+                    _this.retrieveCurrentRoute(function () {
+                        // Prepare google search box
+                        _this.gMap.createSearchBox(document.getElementById('main-search-input'));
+                        _this.gMap.createSearchBox(document.getElementById('tour-search-input'));
+                        // Show HMI with animation
+                        _this.initUXAnimationSequence();
+                    });
+                });
             });
-            // Show HMI with animation
-            this.initUXAnimationSequence();
         };
         /**
          * Initialise HMI animation
@@ -670,7 +685,7 @@ var trackinexercise;
         App.prototype.initUXAnimationSequence = function () {
             var _this = this;
             setTimeout(function () {
-                $('#search-box').addClass('animated slideInDown');
+                $('#main-search-box').addClass('animated slideInDown');
             }, 1000);
             setTimeout(function () {
                 $('#trackin_support').addClass('animated fadeIn');
@@ -679,6 +694,8 @@ var trackinexercise;
             setTimeout(function () {
                 $('#tour').addClass('animated slideInRight');
             }, 2000);
+            $(".nano").nanoScroller();
+            $("[title]").tooltipster();
         };
         /**
          * Add new waypoint to tour
@@ -707,7 +724,7 @@ var trackinexercise;
         /**
          * Retrieve waypoints from tour
          */
-        App.prototype.retrieveCurrentRoute = function () {
+        App.prototype.retrieveCurrentRoute = function (fn) {
             var _this = this;
             new trackinexercise.models.Tour().list(function (data) {
                 // Note : for the demo, only one route
@@ -727,6 +744,7 @@ var trackinexercise;
                         }
                     });
                 });
+                fn.call(_this);
             });
         };
         /**
@@ -782,12 +800,8 @@ var trackinexercise;
             if (wayPointsData.length == 0) {
                 return;
             }
-            // First waypoint
-            wayPointsData[0].duration(0);
-            wayPointsData[0].distance(0);
             this.gMap.drawRoute(wayPointsData, optimize, function (directions, wayPointsMapped) {
                 var wayPointsList = [];
-                wayPointsList.push(wayPointsData[0]);
                 for (var i = 0; i < directions.routes[0].legs.length; i++) {
                     var duration_1 = directions.routes[0].legs[i].duration.value;
                     var distance = directions.routes[0].legs[i].distance.value;
@@ -820,7 +834,7 @@ var trackinexercise;
                         // Toast a message
                         if (optimize) {
                             if (minutesDiff > 0) {
-                                _this.toast("Well done ! Tour has been optimized (" + minutesDiff + " minutes saved) !");
+                                _this.toast("Well done ! Tour has been optimized (<span class=\"green\">" + minutesDiff + " minutes</span> saved) !");
                             }
                             else {
                                 _this.toast("All right ! Tour is already optimized");
@@ -830,11 +844,11 @@ var trackinexercise;
                             if (minutesDiff != 0) {
                                 if (minutesDiff > 0) {
                                     // Tour is shorter
-                                    _this.toast("Tour has been updated (" + -minutesDiff + "minutes)");
+                                    _this.toast("Tour has been updated (<span class=\"green\">" + -minutesDiff + "</span> minutes)");
                                 }
                                 else {
                                     // Tour is longer
-                                    _this.toast("Tour has been updated (+" + -minutesDiff + " minutes)");
+                                    _this.toast("Tour has been updated (+" + -minutesDiff + "  minutes)");
                                 }
                             }
                         }
@@ -888,6 +902,33 @@ var trackinexercise;
             }
             this.toast(message, 'Need help ?');
         };
+        /**
+         * Resolve current user location
+         */
+        App.prototype.resolveLocation = function (fn) {
+            var _this = this;
+            // San Francisco
+            var defaultLocation = { lat: 37.774929, lng: -122.419416 };
+            if (navigator.geolocation) {
+                var options = {
+                    enableHighAccuracy: true,
+                    timeout: 3000,
+                    maximumAge: 0
+                };
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    var location = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    };
+                    fn.call(_this, location);
+                }, function () {
+                    fn.call(_this, defaultLocation);
+                }, options);
+            }
+            else {
+                fn.call(this, defaultLocation);
+            }
+        };
         return App;
     }());
     trackinexercise.App = App;
@@ -908,8 +949,6 @@ var app = new App(gmap);
 // JQuery load on ready
 $(function () {
     ko.applyBindings(app);
-    $(".nano").nanoScroller();
-    $("[title]").tooltipster();
 });
 function onMapLoaded() {
     app.init();

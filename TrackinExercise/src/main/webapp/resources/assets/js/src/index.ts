@@ -20,8 +20,6 @@ let app: App = new App(gmap);
 // JQuery load on ready
 $(function() {
     ko.applyBindings(app);
-    $(".nano").nanoScroller();
-    $("[title]").tooltipster();
 });
 
 function onMapLoaded() {

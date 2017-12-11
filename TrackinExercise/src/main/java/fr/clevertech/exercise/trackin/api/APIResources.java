@@ -16,6 +16,7 @@ import fr.clevertech.exercise.trackin.model.AbstractModel;
 
 /**
  * API Model resources
+ * Contains commons API treatments for API resources
  * @author QuentinSup
  */
 public abstract class APIResources<T extends AbstractModel> {
@@ -25,7 +26,13 @@ public abstract class APIResources<T extends AbstractModel> {
 	 */
 	final static private Logger logger = LoggerFactory.getLogger(APIResources.class);
 
+	/**
+	 * Model class
+	 */
 	private Class<T> classModel;
+	/**
+	 * optional ORDER BY query string
+	 */
 	private String orderBy;
 	
 	/**
