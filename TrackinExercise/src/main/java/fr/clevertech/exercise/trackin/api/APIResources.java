@@ -125,9 +125,8 @@ public abstract class APIResources<T extends AbstractModel> {
 			session.save(model);
 			session.close();
 			
-			// Convert into json
-			final Gson gson = new GsonBuilder().create();
-			final String returnedJsonValue = gson.toJson(model);
+			// Convert into json			
+			final String returnedJsonValue = model.toJson();
 			
 			// Return HttpStatus 200 for Success
 			return new ResponseEntity<String>(returnedJsonValue, HttpStatus.OK);
@@ -204,8 +203,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		T model = retrieveModelObject(id, null);
 	
 		// Convert into json
-		final Gson gson = new GsonBuilder().create();
-		final String jsonValue = gson.toJson(model);
+		final String jsonValue = model.toJson();
 
 		// Return all drivers as json with HttpStatus 200
 		return new ResponseEntity<String>(jsonValue, HttpStatus.OK);
