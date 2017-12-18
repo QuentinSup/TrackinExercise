@@ -21,7 +21,7 @@
 	opacity: @opacity;
 	background-color: @bgColor;
 }
-
+img { vertical-align: middle; }
 .hiding { opacity: 0; }
 .hidden { visibility: hidden; }
 .animated { visibility: visible; }
@@ -34,11 +34,30 @@
     border-radius: 50px;
 }
 
+.green {
+	color: #53b987;
+}
+
+.loading_text {
+	padding: 1em;
+	font-size: .9em;
+}
+
 a.clickable {
-	color: #e6c6c6;
+
+	background: transparent;
+    padding: .3em;
+    color: #fff;
+    display: block;
+    border: 1px solid #fff;
+	text-align: center;
+	font-size: .9em;
+	border-radius: 3px;
+	margin: .2em 0em;
 	
 	&:hover {
-		color: #fff;
+		color: #dedede;
+		border-color: #404040;
 	}
 }
 
@@ -68,7 +87,7 @@ body {
 }
 
 	
-a#search-box {
+#main-search-box {
 
 	position: absolute;
     z-index: 999;
@@ -80,7 +99,30 @@ a#search-box {
     margin-left: -30%;
     opacity: .2;
     transition: opacity 3s;
+    
+   	&:hover {
+		opacity: 1;
+		transition: opacity 1s;
+	}
+}
+
+#tour-search-box {
 	
+	margin: .5em;
+	
+	> input {
+		font-size: .9em;
+	}
+	
+}
+
+.search-box {
+	height: 30px;
+	position: relative;
+}
+
+.search-box {
+
 	> input {
 		position: absolute;
 		bottom: 5px;
@@ -101,12 +143,7 @@ a#search-box {
 		.after();
 		border-radius: 3px;
 	}
-	
-	&:hover {
-		opacity: 1;
-		transition: opacity 1s;
-	}
-	
+
 }
 
 #menu {
@@ -118,7 +155,7 @@ a#search-box {
 	right: 0px;
 	top: 0px;
 	bottom: 0px;
-	width: 300px;
+	width: 350px;
 	z-index: 1;
 	color: @WayPointsTextColor;
 	
@@ -128,10 +165,21 @@ a#search-box {
 	}
 }
 
-#drivers {
-
+#shop {
 	padding: .5em;
-    
+}
+
+#drivers {
+	
+	padding-left: 2em;
+	font-size: .9em;
+	
+	> .driver_title {
+	    color: #888686;
+	    font-weight: normal;
+	    font-size: .9em;
+	}
+	
     .select_box {
     
     	position: relative;
@@ -144,7 +192,7 @@ a#search-box {
     	}
     	
     	> .select_box_value {
-    		padding: .5em 1em;
+    		padding: .3em .5em;
     		border: 1px solid #404040;
     		border-radius: 3px;
     		cursor: pointer;
@@ -162,7 +210,7 @@ a#search-box {
 			bottom:0;
 			right: 0;
 		    margin-left: 0px;
-		    margin-top: 40px;
+		    margin-top: 35px;
     	
     		:after {
 				.after();
@@ -213,8 +261,8 @@ h4 {
     position: absolute;
     left: 0;
     right: 0;
-    top: 50px;
-    bottom: 100px;
+    top: 90px;
+    bottom: 140px;
     height: auto;    
 	
 	.waypoints_line {
@@ -230,7 +278,6 @@ h4 {
 		padding: 0;
 	    margin: 0;
 	    margin-left: 20px;
-	    margin-top: 15px;
 		
 		> li {
 			list-style: none;
@@ -281,11 +328,15 @@ h4 {
 		
 	}
 	
+	.waypoint_detail {
+	    background: #10767b;
+	}
+	
 }
 
 .waypoint_detail {
+
 	.text-smaller();
-    background: #10767b;
     padding-left: .5em;
     margin: 0em 1em;
     border-radius: 5px;
@@ -301,11 +352,13 @@ h4 {
 #waypoint_total {
     position: absolute;
     display: block;
-    bottom: 10px;
+    bottom: 0px;
     left: 0px;
     right: 0px;
     z-index: 9;
-    padding: .5em .5em;
+    padding: .5em 1em;
+    margin: 0;
+    
 }
 
 .progress_area {
@@ -370,6 +423,8 @@ h4 {
 		border: 0px;
 		color: #fff;
 		position: relative;
+		cursor: pointer;
+		
 		
 		&.pac-item-selected {
 		

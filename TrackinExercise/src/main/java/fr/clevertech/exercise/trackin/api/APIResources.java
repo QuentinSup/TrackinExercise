@@ -16,6 +16,7 @@ import fr.clevertech.exercise.trackin.model.AbstractModel;
 
 /**
  * API Model resources
+ * Contains commons API treatments for API resources
  * @author QuentinSup
  */
 public abstract class APIResources<T extends AbstractModel> {
@@ -25,7 +26,13 @@ public abstract class APIResources<T extends AbstractModel> {
 	 */
 	final static private Logger logger = LoggerFactory.getLogger(APIResources.class);
 
+	/**
+	 * Model class
+	 */
 	private Class<T> classModel;
+	/**
+	 * optional ORDER BY query string
+	 */
 	private String orderBy;
 	
 	/**
@@ -118,9 +125,8 @@ public abstract class APIResources<T extends AbstractModel> {
 			session.save(model);
 			session.close();
 			
-			// Convert into json
-			final Gson gson = new GsonBuilder().create();
-			final String returnedJsonValue = gson.toJson(model);
+			// Convert into json			
+			final String returnedJsonValue = model.toJson();
 			
 			// Return HttpStatus 200 for Success
 			return new ResponseEntity<String>(returnedJsonValue, HttpStatus.OK);
@@ -197,8 +203,7 @@ public abstract class APIResources<T extends AbstractModel> {
 		T model = retrieveModelObject(id, null);
 	
 		// Convert into json
-		final Gson gson = new GsonBuilder().create();
-		final String jsonValue = gson.toJson(model);
+		final String jsonValue = model.toJson();
 
 		// Return all drivers as json with HttpStatus 200
 		return new ResponseEntity<String>(jsonValue, HttpStatus.OK);

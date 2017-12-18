@@ -28,84 +28,108 @@ var trackinexercise;
             /**
              * Execute a POST request
              */
-            API.prototype.create = function (fn) {
+            API.prototype.create = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'POST',
                     url: this.uri,
                     data: this.toJson(),
                     contentType: "application/json"
-                }).done(function (resourceData) {
+                }).done(function (resourceData, textStatus, jqXHR) {
                     // Update id
                     _this.id = resourceData.id;
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a PUT request
              */
-            API.prototype.update = function (fn) {
+            API.prototype.update = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'PUT',
                     url: this.uri + "/" + this.id,
                     data: this.toJson(),
                     contentType: "application/json"
-                }).done(function (resourceData) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                }).done(function (resourceData, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a DELETE request
              */
-            API.prototype.remove = function (fn) {
+            API.prototype.remove = function (fnDone, fnFail) {
                 var _this = this;
                 $.ajax({
                     method: 'DELETE',
                     url: this.uri + "/" + this.id,
                     contentType: "application/json"
-                }).done(function () {
+                }).done(function (resourceData, textStatus, jqXHR) {
                     _this.id = null;
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, _this);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, resourceData, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request
              */
-            API.prototype.load = function (id, fn) {
+            API.prototype.load = function (id, fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri + '/' + id).done(function (data) {
+                $.getJSON(this.uri + '/' + id).done(function (data, textStatus, jqXHR) {
                     _this.fromJson(data);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, _this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, _this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request
              */
-            API.prototype.list = function (fn) {
+            API.prototype.list = function (fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri).done(function (data) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                $.getJSON(this.uri).done(function (data, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
             /**
              * Execute a GET request for a sub operation resource
              */
-            API.prototype.sublist = function (operation, fn) {
+            API.prototype.sublist = function (operation, fnDone, fnFail) {
                 var _this = this;
-                $.getJSON(this.uri + '/' + this.id + '/' + operation).done(function (data) {
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, data);
+                $.getJSON(this.uri + '/' + this.id + '/' + operation).done(function (data, textStatus, jqXHR) {
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, data, textStatus, jqXHR);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    if ($.isFunction(fnFail)) {
+                        fnFail.call(_this, jqXHR, textStatus, errorThrown);
                     }
                 });
             };
@@ -115,18 +139,18 @@ var trackinexercise;
              * id => update
              * id = -1 => remove
              */
-            API.prototype.save = function (fn) {
+            API.prototype.save = function (fnDone, fnFail) {
                 if (!this.id) {
                     // Create
-                    this.create(fn);
+                    this.create(fnDone, fnFail);
                 }
                 else if (this.id == -1) {
                     // Delete
-                    this.remove(fn);
+                    this.remove(fnDone, fnFail);
                 }
                 else {
                     // Update
-                    this.update(fn);
+                    this.update(fnDone, fnFail);
                 }
             };
             // Return waypoint data as Json
@@ -183,7 +207,11 @@ var trackinexercise;
              * Return waypoint icon
              */
             WayPoint.prototype.getIcon = function () {
-                return this.type() == 1 ? 'resources/assets/images/dropoff-icon.png' : 'resources/assets/images/pickup-icon.png';
+                switch (this.type()) {
+                    case 0: return 'resources/assets/images/market.png';
+                    case 1: return 'resources/assets/images/dropoff-icon.png';
+                    case 2: return 'resources/assets/images/pickup-icon.png';
+                }
             };
             // Return waypoint data
             WayPoint.prototype.data = function () {
@@ -338,22 +366,22 @@ var trackinexercise;
                 this.driverId = json.driverId;
             };
             // Add waypoint to the route
-            Tour.prototype.push = function (wayPoint, fn) {
+            Tour.prototype.push = function (wayPoint, fnDone, fnFail) {
                 var _this = this;
                 var wayPoints = this.all();
                 // Autoset position
                 wayPoint.position = wayPoints.length;
-                // Autoset type (first must be pickup)
-                wayPoint.type(wayPoints.length == 0 ? 0 : 1);
+                // Autoset type to drop-off
+                wayPoint.type(1);
                 // Autoset tour id
                 wayPoint.tourId = this.id;
                 // Save to database
                 wayPoint.save(function (wPoint) {
                     _this.wayPoints.push(wPoint);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, wPoint);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, wPoint);
                     }
-                });
+                }, fnFail);
             };
             /**
              * Return all the waypoints
@@ -364,15 +392,15 @@ var trackinexercise;
             /**
              * Remove a waypoint from list and database
              */
-            Tour.prototype.detach = function (wayPoint, fn) {
+            Tour.prototype.detach = function (wayPoint, fnDone, fnFail) {
                 var _this = this;
                 wayPoint.remove(function (wPoint) {
                     // Remove waypoint from list
                     _this.wayPoints.remove(wPoint);
-                    if ($.isFunction(fn)) {
-                        fn.call(_this, wPoint);
+                    if ($.isFunction(fnDone)) {
+                        fnDone.call(_this, wPoint);
                     }
-                });
+                }, fnFail);
             };
             /**
              * List waypoints from database
@@ -404,12 +432,10 @@ var trackinexercise;
         /**
          * Initialize map and center San Francisco city ;)
          */
-        GMap.prototype.initMap = function () {
-            // San Francisco
-            var sf = { lat: 37.774929, lng: -122.419416 };
+        GMap.prototype.initMap = function (startPosition) {
             var map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 10,
-                center: sf
+                center: startPosition
             });
             this.map = map;
             return map;
@@ -506,13 +532,13 @@ var trackinexercise;
         GMap.prototype.drawRoute = function (wayPoints, optimize, fn) {
             var _this = this;
             if (optimize === void 0) { optimize = false; }
-            if (!wayPoints || wayPoints.length < 2) {
+            if (!wayPoints || wayPoints.length == 0) {
                 return;
             }
             app.calculatingRoute(true);
             // Copy waypoints array
             var wayPointsRoute = [].concat(wayPoints);
-            var fromWayPoint = wayPointsRoute.shift();
+            var fromWayPoint = app.shopAddress();
             var toWayPoint = wayPointsRoute.pop();
             var wayPointsMapped = wayPointsRoute.map(function (wayPoint) {
                 return {
@@ -543,16 +569,31 @@ var trackinexercise;
         /**
          * Callback from google load
          */
-        GMap.prototype.initGMap = function () {
+        GMap.prototype.initGMap = function (fn) {
+            var _this = this;
             this.directionsService = new google.maps.DirectionsService();
-            var map = this.initMap();
+            app.resolveLocation(function (position) {
+                var wayPoint = new trackinexercise.models.WayPoint("My shop");
+                wayPoint.setCoordinates(position.lat, position.lng);
+                wayPoint.type(0);
+                app.shopAddress(wayPoint);
+                // Init map and center to location
+                var map = _this.initMap(position);
+                // Add shop waypoint
+                _this.addWayPointMarker(wayPoint);
+                fn.call(_this);
+            });
+        };
+        /**
+         * Create a search box
+         */
+        GMap.prototype.createSearchBox = function (input) {
+            var _this = this;
             // Create the search box and link it to the UI element.
-            var input = document.getElementById('search-input');
             var searchBox = new google.maps.places.SearchBox(input);
-            var markers = [];
             // Bias the SearchBox results towards current map's viewport.
-            map.addListener('bounds_changed', function () {
-                searchBox.setBounds(map.getBounds());
+            this.map.addListener('bounds_changed', function () {
+                searchBox.setBounds(_this.map.getBounds());
             });
             // Listen for the event fired when the user selects a prediction and retrieve
             // more details for that place.
@@ -561,11 +602,6 @@ var trackinexercise;
                 if (places.length == 0) {
                     return;
                 }
-                // Clear out the old markers.
-                markers.forEach(function (marker) {
-                    marker.setMap(null);
-                });
-                markers = [];
                 // For each place, get the icon, name and location.
                 var bounds = new google.maps.LatLngBounds();
                 places.forEach(function (place) {
@@ -583,13 +619,7 @@ var trackinexercise;
                     var wayPoint = new trackinexercise.models.WayPoint(place.name);
                     wayPoint.setCoordinates(place.geometry.location.lat(), place.geometry.location.lng());
                     app.addWayPoint(wayPoint);
-                    // Create a marker for each place.
-                    markers.push(new google.maps.Marker({
-                        map: map,
-                        icon: icon,
-                        title: place.name,
-                        position: place.geometry.location
-                    }));
+                    input.value = '';
                     if (place.geometry.viewport) {
                         // Only geocodes have viewport.
                         bounds.union(place.geometry.viewport);
@@ -598,7 +628,7 @@ var trackinexercise;
                         bounds.extend(place.geometry.location);
                     }
                 });
-                map.fitBounds(bounds);
+                _this.map.fitBounds(bounds);
             });
         };
         return GMap;
@@ -628,6 +658,10 @@ var trackinexercise;
             this.drivers = ko.observableArray();
             // Message trigger
             this.calculatingRoute = ko.observable(false);
+            // Waiting
+            this.waitingFor = ko.observable(false);
+            // Shop address (should come from database by that's ok for the demo)
+            this.shopAddress = ko.observable();
             // Current driver selection
             this.selectedDriver = ko.observable();
             /**
@@ -648,21 +682,31 @@ var trackinexercise;
          * Update current tour driver
          */
         App.prototype.updateTourDriver = function (driver) {
+            var _this = this;
             this.selectedDriver(driver);
             this.currentTour().driverId = driver.id;
-            this.currentTour().save();
+            this.currentTour().save(function (data) {
+                _this.toast("The driver " + driver.fullName() + " has been correctly assigned to the tour");
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
+            });
         };
         /**
          * Initialization
          */
         App.prototype.init = function () {
             var _this = this;
-            this.gMap.initGMap();
-            this.retrieveDriverList(function () {
-                _this.retrieveCurrentRoute();
+            this.gMap.initGMap(function () {
+                _this.retrieveDriverList(function () {
+                    _this.retrieveCurrentRoute(function () {
+                        // Prepare google search box
+                        _this.gMap.createSearchBox(document.getElementById('main-search-input'));
+                        _this.gMap.createSearchBox(document.getElementById('tour-search-input'));
+                        // Show HMI with animation
+                        _this.initUXAnimationSequence();
+                    });
+                });
             });
-            // Show HMI with animation
-            this.initUXAnimationSequence();
         };
         /**
          * Initialise HMI animation
@@ -670,7 +714,7 @@ var trackinexercise;
         App.prototype.initUXAnimationSequence = function () {
             var _this = this;
             setTimeout(function () {
-                $('#search-box').addClass('animated slideInDown');
+                $('#main-search-box').addClass('animated slideInDown');
             }, 1000);
             setTimeout(function () {
                 $('#trackin_support').addClass('animated fadeIn');
@@ -679,6 +723,15 @@ var trackinexercise;
             setTimeout(function () {
                 $('#tour').addClass('animated slideInRight');
             }, 2000);
+            setTimeout(function () {
+                try {
+                    $("[title]").tooltipster();
+                    $(".nano").nanoScroller();
+                }
+                catch (e) {
+                    //silent 
+                }
+            }, 100);
         };
         /**
          * Add new waypoint to tour
@@ -686,10 +739,14 @@ var trackinexercise;
         App.prototype.addWayPoint = function (wayPoint) {
             var _this = this;
             this.currentTour().push(wayPoint, function () {
+                // Show success
+                _this.toast("New waypoint has been correctly assigned to the tour");
                 // Add marker
                 _this.gMap.addWayPointMarker(wayPoint);
                 // Draw roads
                 _this.drawWayPointsRoads();
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
             });
         };
         /**
@@ -698,16 +755,20 @@ var trackinexercise;
         App.prototype.removeWayPoint = function (wayPoint) {
             var _this = this;
             this.currentTour().detach(wayPoint, function () {
+                // Show success
+                _this.toast("Waypoint has been correctly removed from the tour");
                 wayPoint.marker.setMap(null);
                 wayPoint.marker = null;
                 // Redraw roads (could be optimized)
                 _this.drawWayPointsRoads();
+            }, function () {
+                _this.toast("Oups ! Something wrong happened. Please refresh page.");
             });
         };
         /**
          * Retrieve waypoints from tour
          */
-        App.prototype.retrieveCurrentRoute = function () {
+        App.prototype.retrieveCurrentRoute = function (fn) {
             var _this = this;
             new trackinexercise.models.Tour().list(function (data) {
                 // Note : for the demo, only one route
@@ -727,6 +788,7 @@ var trackinexercise;
                         }
                     });
                 });
+                fn.call(_this);
             });
         };
         /**
@@ -765,6 +827,7 @@ var trackinexercise;
             // For each place, get the icon, name and location.
             var bounds = new google.maps.LatLngBounds();
             var wayPoints = this.currentTour().all();
+            bounds.extend(this.shopAddress().marker.position);
             for (var i = 0; i < wayPoints.length; i++) {
                 var wayPoint = wayPoints[i];
                 bounds.extend(wayPoint.marker.position);
@@ -782,12 +845,8 @@ var trackinexercise;
             if (wayPointsData.length == 0) {
                 return;
             }
-            // First waypoint
-            wayPointsData[0].duration(0);
-            wayPointsData[0].distance(0);
             this.gMap.drawRoute(wayPointsData, optimize, function (directions, wayPointsMapped) {
                 var wayPointsList = [];
-                wayPointsList.push(wayPointsData[0]);
                 for (var i = 0; i < directions.routes[0].legs.length; i++) {
                     var duration_1 = directions.routes[0].legs[i].duration.value;
                     var distance = directions.routes[0].legs[i].distance.value;
@@ -820,7 +879,7 @@ var trackinexercise;
                         // Toast a message
                         if (optimize) {
                             if (minutesDiff > 0) {
-                                _this.toast("Well done ! Tour has been optimized (" + minutesDiff + " minutes saved) !");
+                                _this.toast("Well done ! Tour has been optimized (<span class=\"green\">" + minutesDiff + " minutes</span> saved) !");
                             }
                             else {
                                 _this.toast("All right ! Tour is already optimized");
@@ -830,11 +889,11 @@ var trackinexercise;
                             if (minutesDiff != 0) {
                                 if (minutesDiff > 0) {
                                     // Tour is shorter
-                                    _this.toast("Tour has been updated (" + -minutesDiff + "minutes)");
+                                    _this.toast("Tour has been updated (<span class=\"green\">" + -minutesDiff + "</span> minutes)");
                                 }
                                 else {
                                     // Tour is longer
-                                    _this.toast("Tour has been updated (+" + -minutesDiff + " minutes)");
+                                    _this.toast("Tour has been updated (+" + -minutesDiff + "  minutes)");
                                 }
                             }
                         }
@@ -888,6 +947,33 @@ var trackinexercise;
             }
             this.toast(message, 'Need help ?');
         };
+        /**
+         * Resolve current user location
+         */
+        App.prototype.resolveLocation = function (fn) {
+            var _this = this;
+            // San Francisco
+            var defaultLocation = { lat: 37.774929, lng: -122.419416 };
+            if (navigator.geolocation) {
+                var options = {
+                    enableHighAccuracy: true,
+                    timeout: 3000,
+                    maximumAge: 0
+                };
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    var location = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    };
+                    fn.call(_this, location);
+                }, function () {
+                    fn.call(_this, defaultLocation);
+                }, options);
+            }
+            else {
+                fn.call(this, defaultLocation);
+            }
+        };
         return App;
     }());
     trackinexercise.App = App;
@@ -908,8 +994,6 @@ var app = new App(gmap);
 // JQuery load on ready
 $(function () {
     ko.applyBindings(app);
-    $(".nano").nanoScroller();
-    $("[title]").tooltipster();
 });
 function onMapLoaded() {
     app.init();

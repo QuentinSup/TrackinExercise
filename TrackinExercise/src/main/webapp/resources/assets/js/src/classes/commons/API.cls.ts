@@ -9,7 +9,7 @@ module trackinexercise.commons {
          * Common attribute id
          */
         public id: number;
-        
+
         /**
          * API uri
          */
@@ -29,99 +29,123 @@ module trackinexercise.commons {
         /**
          * Execute a POST request
          */
-        public create(fn?: Function): void {
+        public create(fnDone?: Function, fnFail?: Function): void {
             $.ajax({
                 method: 'POST',
                 url: this.uri,
                 data: this.toJson(),
                 contentType: "application/json"
-            }).done((resourceData): void => {
+            }).done((resourceData: any, textStatus: string, jqXHR: any): void => {
 
                 // Update id
                 this.id = resourceData.id;
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, this);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, this, resourceData, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
 
         /**
          * Execute a PUT request
          */
-        public update(fn?: Function): void {
+        public update(fnDone?: Function, fnFail?: Function): void {
             $.ajax({
                 method: 'PUT',
                 url: this.uri + "/" + this.id,
                 data: this.toJson(),
                 contentType: "application/json"
-            }).done((resourceData): void => {
+            }).done((resourceData: any, textStatus: string, jqXHR: any): void => {
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, this);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, this, resourceData, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
 
         /**
          * Execute a DELETE request
          */
-        public remove(fn?: Function): void {
+        public remove(fnDone?: Function, fnFail?: Function): void {
             $.ajax({
                 method: 'DELETE',
                 url: this.uri + "/" + this.id,
                 contentType: "application/json"
-            }).done((): void => {
+            }).done((resourceData: any, textStatus: string, jqXHR: any): void => {
 
                 this.id = null;
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, this);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, this, resourceData, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
-        
+
         /**
          * Execute a GET request
          */
-        public load(id: string, fn?: Function): void {
-            $.getJSON(this.uri + '/' + id).done((data): void => {
+        public load(id: string, fnDone?: Function, fnFail?: Function): void {
+            $.getJSON(this.uri + '/' + id).done((data: any, textStatus: string, jqXHR: any): void => {
 
                 this.fromJson(data);
-                
-                if ($.isFunction(fn)) {
-                    fn.call(this, data);
+
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, this, data, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
 
         /**
          * Execute a GET request
          */
-        public list(fn?: Function): void {
-            $.getJSON(this.uri).done((data): void => {
+        public list(fnDone?: Function, fnFail?: Function): void {
+            $.getJSON(this.uri).done((data: any, textStatus: string, jqXHR: any): void => {
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, data);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, data, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
-        
+
         /**
          * Execute a GET request for a sub operation resource
          */
-        public sublist(operation: string, fn?: Function): void {
-            $.getJSON(this.uri + '/' + this.id + '/' + operation).done((data): void => {
+        public sublist(operation: string, fnDone?: Function, fnFail?: Function): void {
+            $.getJSON(this.uri + '/' + this.id + '/' + operation).done((data: any, textStatus: string, jqXHR: any): void => {
 
-                if ($.isFunction(fn)) {
-                    fn.call(this, data);
+                if ($.isFunction(fnDone)) {
+                    fnDone.call(this, data, textStatus, jqXHR);
                 }
 
+            }).fail((jqXHR: any, textStatus: string, errorThrown: any): void => {
+                if ($.isFunction(fnFail)) {
+                    fnFail.call(this, jqXHR, textStatus, errorThrown);
+                }
             });
         }
 
@@ -131,20 +155,20 @@ module trackinexercise.commons {
          * id => update
          * id = -1 => remove
          */
-        public save(fn?: Function): void {
+        public save(fnDone?: Function, fnFail?: Function): void {
 
             if (!this.id) {
                 // Create
-                this.create(fn);
+                this.create(fnDone, fnFail);
             } else if (this.id == -1) {
                 // Delete
-                this.remove(fn);
+                this.remove(fnDone, fnFail);
             } else {
                 // Update
-                this.update(fn);
+                this.update(fnDone, fnFail);
             }
         }
-        
+
         // Return waypoint data as Json
         public toJson(): string {
             return JSON.stringify(this.data());
@@ -153,7 +177,7 @@ module trackinexercise.commons {
         // Abstract methods to implement
         abstract data(): any;
         abstract fromJson(data: any): void;
-        
+
     }
 
 }
