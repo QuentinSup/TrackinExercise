@@ -6,13 +6,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import fr.clevertech.exercise.trackin.model.def.IDriver;
+
 /**
  * Driver hibernate model
  * @author QuentinSup
  */
 @Entity
 @Table(name = "driver")
-public class Driver extends AbstractModel {
+public class Driver extends AbstractModel implements IDriver {
 	
 	/**
 	 * Identifier

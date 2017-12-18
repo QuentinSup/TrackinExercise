@@ -7,13 +7,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import fr.clevertech.exercise.trackin.model.def.IWayPoint;
+
 /**
  * Waypoint hibernate model
  * @author QuentinSup
  */
 @Entity
 @Table(name = "waypoint")
-public class WayPoint extends AbstractModel {
+public class WayPoint extends AbstractModel implements IWayPoint {
 	
 	/**
 	 * Identifier

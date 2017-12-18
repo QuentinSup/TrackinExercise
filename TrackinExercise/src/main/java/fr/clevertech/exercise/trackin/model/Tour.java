@@ -7,13 +7,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import fr.clevertech.exercise.trackin.model.def.ITour;
+
 /**
  * Tour hibernate model
  * @author QuentinSup
  */
 @Entity
 @Table(name = "tour")
-public class Tour extends AbstractModel {
+public class Tour extends AbstractModel implements ITour {
 	
 	/**
 	 * Identifier
